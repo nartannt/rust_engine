@@ -8,6 +8,8 @@ fn v3_norm <S: Float> (vec: Vector3<S>) -> S {
     return (vec.x.powi(2) + vec.y.powi(2) + vec.z.powi(2)).sqrt();
 }
 
+/*fn v3_normalised <S: Float> (vec: Vector3<S>) ->  S {
+    return dir.map(|x|{})*/
 
 struct Transform {
     position: Vector3<f32>,
