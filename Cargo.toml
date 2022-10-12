@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 glium = "*"
+winit = "*"
 image = "*"
 cgmath = "*"
 num = "*"
+libm = "0.2.5"

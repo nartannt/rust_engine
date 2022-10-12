@@ -2,20 +2,10 @@
 #![allow(unused_variables)]
 
 use cgmath::Vector3;
-use num::Float;
 
-fn v3_norm <S: Float> (vec: Vector3<S>) -> S {
-    return (vec.x.powi(2) + vec.y.powi(2) + vec.z.powi(2)).sqrt();
-}
-
-/*fn v3_normalised <S: Float> (vec: Vector3<S>) ->  S {
-    return dir.map(|x|{})*/
-
-struct Transform {
-    position: Vector3<f32>,
-    direction: Vector3<f32>,
-    size: Vector3<f32>,
-}
+use crate::space::Transform;
+use crate::space::v3_normalised;
+use crate::space::rotation_to_direction;
 
 struct Camera {
     transform: Transform
@@ -23,11 +13,10 @@ struct Camera {
 
 impl Camera {
     
-    fn view_matrix (self, up: Vector3<f32>) -> [[f32; 4]; 4] {
-        
-        let dir = self.transform.direction;
-        let dir_norm = v3_norm(dir);
-        let dir_normalised = dir.map(|x|{x/dir_norm});
+    fn view_matrix (self, up: Vector3<f64>) -> [[f64; 4]; 4] {
+       
+        let dir = rotation_to_direction(self.transform.rotation);
+        let dir_normalised = v3_normalised(dir);
 
         let s = Vector3::cross(dir_normalised, up);
 
@@ -40,4 +29,6 @@ impl Camera {
             ];
         return res;
     }
+
+
 }
