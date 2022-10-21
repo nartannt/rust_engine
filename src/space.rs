@@ -3,8 +3,8 @@
 
 use cgmath::Vector3;
 use num::Float;
-use libm::cos;
-use libm::sin;
+use libm::cosf;
+use libm::sinf;
 
 
 // norm of a vector2
@@ -15,22 +15,35 @@ pub fn v3_norm <S: Float> (vec: Vector3<S>) -> S {
 // normalised vector2
 pub fn v3_normalised <S: Float> (vec: Vector3<S>) ->  Vector3<S> {
     let norm = v3_norm(vec);
-    return vec.map(|x|{x/norm});
+    let res = vec.map(|x|{x/norm});
+    
+    // if the norm is zero
+    // need to find a better solution
+    if res.x.is_nan() {
+        return vec;
+    }
+    else {
+        return res;
+    }
+    
 }
 
 // the information of how an object is in space
+// should we be using a generic num::Float type instead?
+// probably, but that is something that can be refactored later
+#[derive(Copy, Clone)]
 pub struct Transform {
-    pub position: Vector3<f64>,
-    pub rotation: Vector3<f64>,
-    pub size: Vector3<f64>,
+    pub position: Vector3<f32>,
+    pub rotation: Vector3<f32>,
+    pub size: Vector3<f32>,
 }
 
 
 // get the direction from a rotation vector
-pub fn rotation_to_direction (rot: Vector3<f64>) -> Vector3<f64> {
-    let x_dir = sin(rot.y) * cos(rot.z);
-    let y_dir = cos(rot.x) * sin(rot.z);
-    let z_dir = sin(rot.x) * cos(rot.y);
+pub fn rotation_to_direction (rot: Vector3<f32>) -> Vector3<f32> {
+    let x_dir = sinf(rot.y) * cosf(rot.z);
+    let y_dir = cosf(rot.x) * sinf(rot.z);
+    let z_dir = cosf(rot.x) * cosf(rot.y);
     return Vector3::new(x_dir, y_dir, z_dir);
 }
 

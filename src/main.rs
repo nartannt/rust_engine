@@ -1,10 +1,17 @@
+#![allow(unused_variables)]
+
 #[macro_use]
 extern crate glium;
 extern crate image;
 extern crate libm;
 
+use cgmath::Vector3;
+use crate::camera::Camera;
+use crate::space::Transform;
+
 mod teapot;
 mod camera;
+mod graphic_object;
 mod space;
 
 fn main() {
@@ -30,11 +37,13 @@ fn main() {
         
         uniform mat4 matrix;
         uniform mat4 perspective;
-        uniform mat4 resize;
+        uniform mat4 view;
+        //uniform mat4 resize;
         
         void main() {
-            v_normal = transpose(inverse(mat3(matrix))) * normal;
-            gl_Position = perspective * matrix * vec4(position, 100.0);
+            mat4 modelview = view * matrix;
+            v_normal = transpose(inverse(mat3(modelview))) * normal;
+            gl_Position = perspective * modelview * vec4(position, 100.0);
         }
     "#;
     
@@ -57,6 +66,29 @@ fn main() {
     
     let mut t: f32 = -0.5;
 
+    let mut main_camera = Camera {
+        transform: Transform {
+            position: Vector3::new(0.0, 0.0, 0.0),
+            rotation: Vector3::new(0.0, 0.0, 0.0),
+            size: Vector3::new(1.0, 1.0, 1.0),
+        },
+        fov: 1.0,
+    };
+
+    let up = Vector3::new(0.0, 1.0, 0.0);
+
+
+    /*let view = [[1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0f32],
+               ];*/
+
+    //println!("{}", view[2][0]);
+    //println!("{}", view[2][1]);
+    //println!("{}", view[2][2]);
+    //println!("{}", view[2][3]);
+   
     event_loop.run(move |ev, _, control_flow| {
         
         let begin_frame_time = std::time::Instant::now();
@@ -84,7 +116,9 @@ fn main() {
             [0.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 2.0, 1.0f32],
         ];
-
+        
+        let view = main_camera.view_matrix(up);
+        
         let perspective = {
             let (width, height) = target.get_dimensions();
             let aspect_ratio = height as f32 / width as f32;
@@ -112,8 +146,12 @@ fn main() {
             .. Default::default()
         };
 
+
+        
+
         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
-        target.draw((&positions, &normals), &indices, &program, &uniform!{matrix: matrix, u_light: light, perspective: perspective}, &params).unwrap();
+        target.draw((&positions, &normals), &indices, &program,
+                    &uniform!{matrix: matrix, view: view, u_light: light, perspective: perspective}, &params).unwrap();
         target.finish().unwrap();
         
         let next_frame_time = begin_frame_time + std::time::Duration::from_nanos(16_666_667);
