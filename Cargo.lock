@@ -1056,6 +1056,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "obj-rs"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c90a2f645433dba5c609451d3fa847282b0f23ee8d8fa75491a946af53cb1db4"
+dependencies = [
+ "num-traits",
+ "serde",
+]
+
+[[package]]
 name = "objc"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1244,6 +1254,7 @@ dependencies = [
  "image",
  "libm",
  "num",
+ "obj-rs",
  "winit",
 ]
 
@@ -1297,6 +1308,9 @@ name = "serde"
 version = "1.0.145"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "728eb6351430bccb993660dfffc5a72f91ccc1295abaa8ce19b27ebe4f75568b"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_derive"

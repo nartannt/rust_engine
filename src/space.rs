@@ -38,6 +38,15 @@ pub struct Transform {
     pub size: Vector3<f32>,
 }
 
+impl Default for Transform {
+    fn default() -> Transform {
+        Transform {
+            position: Vector3::new(0.0, 0.0, 0.0f32),
+            rotation: Vector3::new(0.0, 0.0, 0.0f32),
+            size: Vector3::new(1.0, 1.0, 1.0f32),
+        }
+    }
+}
 
 // get the direction from a rotation vector
 pub fn rotation_to_direction (rot: Vector3<f32>) -> Vector3<f32> {

@@ -6,12 +6,15 @@ extern crate image;
 extern crate libm;
 
 use cgmath::Vector3;
+use std::path::Path;
 use crate::camera::Camera;
 use crate::space::Transform;
+use crate::graphic_object::GraphicObject;
+use crate::graphic_object::load_model;
 
+mod graphic_object;
 mod teapot;
 mod camera;
-mod graphic_object;
 mod space;
 
 fn main() {
@@ -26,6 +29,21 @@ fn main() {
     let positions = glium::VertexBuffer::new(&display, &teapot::VERTICES).unwrap();
     let normals = glium::VertexBuffer::new(&display, &teapot::NORMALS).unwrap();
     let indices = glium::IndexBuffer::new(&display, glium::index::PrimitiveType::TrianglesList, &teapot::INDICES).unwrap();   
+
+    
+    let test_path = Path::new("src/test.obj");
+    let test = GraphicObject{
+        transform: Transform{..Default::default()},
+        is_active: true,
+        geometry: load_model(test_path, &display)
+    };
+
+    let test_geometry = test.geometry.unwrap();
+
+    let positions = test_geometry.vertices;
+    let normals = test_geometry.normals;
+    let indices = test_geometry.indices;
+
 
     let vertex_shader_src = r#"
         #version 150
@@ -43,7 +61,7 @@ fn main() {
         void main() {
             mat4 modelview = view * matrix;
             v_normal = transpose(inverse(mat3(modelview))) * normal;
-            gl_Position = perspective * modelview * vec4(position, 100.0);
+            gl_Position = perspective * modelview * vec4(position, 1.0);
         }
     "#;
     
@@ -66,9 +84,9 @@ fn main() {
     
     let mut t: f32 = -0.5;
 
-    let mut main_camera = Camera {
+    let main_camera = Camera {
         transform: Transform {
-            position: Vector3::new(0.0, 0.0, 0.0),
+            position: Vector3::new(0.0, 0.0, -5.0),
             rotation: Vector3::new(0.0, 0.0, 0.0),
             size: Vector3::new(1.0, 1.0, 1.0),
         },

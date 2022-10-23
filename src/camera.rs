@@ -41,14 +41,12 @@ impl Camera {
         // added signs to fix things for now, will need to redo the maths
         let res =
             [
-                [-s_normalised[0], u[0], dir_normalised[0], 0.0],
-                [s_normalised[1], -u[1], dir_normalised[1], 0.0],
+                [s_normalised[0], u[0], dir_normalised[0], 0.0],
+                [s_normalised[1], u[1], dir_normalised[1], 0.0],
                 [s_normalised[2], u[2], dir_normalised[2], 0.0],
                 [p[0], p[1], p[2], 1.0f32],
             ];
-        //println!("{}", res[0][3]);
-        //println!("{}", res[1][3]);
-        //println!("{}", res[2][3]);
+        
         return res;
     }
 
