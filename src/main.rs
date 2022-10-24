@@ -11,6 +11,7 @@ use crate::camera::Camera;
 use crate::space::Transform;
 use crate::graphic_object::GraphicObject;
 use crate::graphic_object::load_model;
+use glutin::event::VirtualKeyCode;
 
 mod graphic_object;
 mod teapot;
@@ -31,7 +32,7 @@ fn main() {
     let indices = glium::IndexBuffer::new(&display, glium::index::PrimitiveType::TrianglesList, &teapot::INDICES).unwrap();   
 
     
-    let test_path = Path::new("src/test.obj");
+    let test_path = Path::new("src/test2.obj");
     let test = GraphicObject{
         transform: Transform{..Default::default()},
         is_active: true,
@@ -84,7 +85,7 @@ fn main() {
     
     let mut t: f32 = -0.5;
 
-    let main_camera = Camera {
+    let mut main_camera = Camera {
         transform: Transform {
             position: Vector3::new(0.0, 0.0, -5.0),
             rotation: Vector3::new(0.0, 0.0, 0.0),
@@ -110,6 +111,8 @@ fn main() {
     event_loop.run(move |ev, _, control_flow| {
         
         let begin_frame_time = std::time::Instant::now();
+        let speed = (3.1415/180.0)*0.25f32;
+        let mspeed = 0.1f32;
 
         match ev {
             glutin::event::Event::WindowEvent { event, .. } => match event {
@@ -117,9 +120,23 @@ fn main() {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
                     return;
                 },
+                glutin::event::WindowEvent::KeyboardInput {input, ..} => match input.virtual_keycode {
+                    Some(VirtualKeyCode::Up) => {main_camera.transform.rotation.x += 5.0*speed; return;},
+                    Some(VirtualKeyCode::Down) => {main_camera.transform.rotation.x -= 5.0*speed; return;},
+                    Some(VirtualKeyCode::Right) => {main_camera.transform.rotation.y += 5.0*speed; return;},
+                    Some(VirtualKeyCode::Left) => {main_camera.transform.rotation.y -= 5.0*speed; return;},
+                    Some(VirtualKeyCode::D) => {main_camera.transform.position.x += 5.0*mspeed; return;},
+                    Some(VirtualKeyCode::Q) => {main_camera.transform.position.x -= 5.0*mspeed; return;},
+                    Some(VirtualKeyCode::Z) => {main_camera.transform.position.y += 5.0*mspeed; return;},
+                    Some(VirtualKeyCode::S) => {main_camera.transform.position.y -= 5.0*mspeed; return;},
+                    Some(VirtualKeyCode::E) => {main_camera.transform.position.z += 5.0*mspeed; return;},
+                    Some(VirtualKeyCode::R) => {main_camera.transform.position.z -= 5.0*mspeed; return;},
+                    _ => return,
+                }
+
                 _ => return,
             },
-           _ => (),
+            _ => (),
         }
         
         t += 0.002;

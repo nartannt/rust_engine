@@ -50,9 +50,9 @@ impl Default for Transform {
 
 // get the direction from a rotation vector
 pub fn rotation_to_direction (rot: Vector3<f32>) -> Vector3<f32> {
-    let x_dir = sinf(rot.y) * cosf(rot.z);
-    let y_dir = cosf(rot.x) * sinf(rot.z);
-    let z_dir = cosf(rot.x) * cosf(rot.y);
-    return Vector3::new(x_dir, y_dir, z_dir);
+    let x_dir = (1.0) * sinf(rot.y) * cosf(rot.z);
+    let y_dir = (1.0) * sinf(rot.x) * cosf(rot.z);
+    let z_dir = (1.0) * cosf(rot.x) * cosf(rot.y);
+    return v3_normalised(Vector3::new(x_dir, y_dir, z_dir));
 }
 
