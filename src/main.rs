@@ -20,7 +20,7 @@ mod space;
 
 fn main() {
    
-    use glium::{glutin, Surface};
+    use glium::{Surface};
     
     let event_loop = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new();
@@ -91,7 +91,7 @@ fn main() {
             rotation: Vector3::new(0.0, 0.0, 0.0),
             size: Vector3::new(1.0, 1.0, 1.0),
         },
-        fov: 1.0,
+        fov: 0.1,
     };
 
     let up = Vector3::new(0.0, 1.0, 0.0);

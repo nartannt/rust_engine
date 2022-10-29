@@ -10,12 +10,19 @@ use crate::space::rotation_to_direction;
 #[derive(Copy, Clone)]
 pub struct Camera {
     pub transform: Transform,
-    
-    pub fov: f64
+    pub fov: f64,
 }
 
 impl Camera {
-    
+   
+    pub fn get_transform (self) -> Transform {
+        return self.transform;
+    }
+
+    pub fn set_position (mut self, new_pos: Vector3<f32>) -> () {
+        self.transform.position = new_pos;
+    }
+
     pub fn view_matrix (self, up: Vector3<f32>) -> [[f32; 4]; 4] {
        
         let dir = rotation_to_direction(self.transform.rotation);
