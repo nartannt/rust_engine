@@ -20,12 +20,12 @@ impl Camera {
     }
 
     pub fn set_position (mut self, new_pos: Vector3<f32>) -> () {
-        self.transform.position = new_pos;
+        self.transform.set_position(new_pos);
     }
 
     pub fn view_matrix (self, up: Vector3<f32>) -> [[f32; 4]; 4] {
        
-        let dir = rotation_to_direction(self.transform.rotation);
+        let dir = rotation_to_direction(self.transform.get_rotation());
         let dir_normalised = v3_normalised(dir);
         
         // vector that is orthogonal to the direction the camera is facing
@@ -39,7 +39,7 @@ impl Camera {
         let u = Vector3::cross(dir_normalised, s_normalised);
        
         
-        let pos = self.transform.position;
+        let pos = self.transform.get_position();
         let p = [-pos[0] * s_normalised[0] - pos[1] * s_normalised[1] - pos[2] * s_normalised[2],
                 -pos[0] * u[0] - pos[1] * u[1] - pos[2] * u[2],
                 -pos[0] * dir_normalised[0] - pos[1] * dir_normalised[1] - pos[2] * dir_normalised[2],

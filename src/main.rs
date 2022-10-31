@@ -34,7 +34,7 @@ fn main() {
     
     let test_path = Path::new("src/test2.obj");
     let test = GraphicObject{
-        transform: Transform{..Default::default()},
+        transform: Transform::default(),
         is_active: true,
         geometry: load_model(test_path, &display)
     };
@@ -86,14 +86,10 @@ fn main() {
     let mut t: f32 = -0.5;
 
     let mut main_camera = Camera {
-        transform: Transform {
-            position: Vector3::new(0.0, 0.0, -5.0),
-            rotation: Vector3::new(0.0, 0.0, 0.0),
-            size: Vector3::new(1.0, 1.0, 1.0),
-        },
-        fov: 0.1,
+        transform: Transform::new(Vector3::new(0.0, 0.0, -5.0), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0)),
+        fov: 0.1
     };
-
+            
     let up = Vector3::new(0.0, 1.0, 0.0);
 
 
@@ -114,6 +110,9 @@ fn main() {
         let speed = (3.1415/180.0)*0.25f32;
         let mspeed = 0.1f32;
 
+        let rot = main_camera.transform.get_rotation();
+        let pos = main_camera.transform.get_position();
+        
         match ev {
             glutin::event::Event::WindowEvent { event, .. } => match event {
                 glutin::event::WindowEvent::CloseRequested => {
@@ -121,16 +120,46 @@ fn main() {
                     return;
                 },
                 glutin::event::WindowEvent::KeyboardInput {input, ..} => match input.virtual_keycode {
-                    Some(VirtualKeyCode::Up) => {main_camera.transform.rotation.x += 5.0*speed; return;},
-                    Some(VirtualKeyCode::Down) => {main_camera.transform.rotation.x -= 5.0*speed; return;},
-                    Some(VirtualKeyCode::Right) => {main_camera.transform.rotation.y += 5.0*speed; return;},
-                    Some(VirtualKeyCode::Left) => {main_camera.transform.rotation.y -= 5.0*speed; return;},
-                    Some(VirtualKeyCode::D) => {main_camera.transform.position.x += 5.0*mspeed; return;},
-                    Some(VirtualKeyCode::Q) => {main_camera.transform.position.x -= 5.0*mspeed; return;},
-                    Some(VirtualKeyCode::Z) => {main_camera.transform.position.y += 5.0*mspeed; return;},
-                    Some(VirtualKeyCode::S) => {main_camera.transform.position.y -= 5.0*mspeed; return;},
-                    Some(VirtualKeyCode::E) => {main_camera.transform.position.z += 5.0*mspeed; return;},
-                    Some(VirtualKeyCode::R) => {main_camera.transform.position.z -= 5.0*mspeed; return;},
+                    Some(VirtualKeyCode::Up) => {
+                        main_camera.transform.set_rotation(Vector3::new(rot.x+5.0*speed,rot.y,rot.z));
+                        return;
+                    },
+                    Some(VirtualKeyCode::Down) => {
+                        main_camera.transform.set_rotation(Vector3::new(rot.x-5.0*speed,rot.y,rot.z));
+                        return;
+                    },
+                    Some(VirtualKeyCode::Right) => {
+                        main_camera.transform.set_rotation(Vector3::new(rot.x,rot.y+5.0*speed,rot.z));
+                        return;
+                    },
+                    Some(VirtualKeyCode::Left) => {
+                        main_camera.transform.set_rotation(Vector3::new(rot.x,rot.y-5.0*speed,rot.z));
+                        return;
+                    },
+                    Some(VirtualKeyCode::D) => {
+                        main_camera.transform.set_position(Vector3::new(pos.x+5.0*mspeed, pos.y, pos.z));
+                        return;
+                    },
+                    Some(VirtualKeyCode::Q) => {
+                        main_camera.transform.set_position(Vector3::new(pos.x-5.0*mspeed, pos.y, pos.z));
+                        return;
+                    },
+                    Some(VirtualKeyCode::Z) => {
+                        main_camera.transform.set_position(Vector3::new(pos.x, pos.y+5.0*mspeed, pos.z));
+                        return;
+                    },
+                    Some(VirtualKeyCode::S) => {
+                        main_camera.transform.set_position(Vector3::new(pos.x, pos.y-5.0*mspeed, pos.z));
+                        return;
+                    },
+                    Some(VirtualKeyCode::E) => {
+                        main_camera.transform.set_position(Vector3::new(pos.x, pos.y, pos.z+5.0*mspeed));
+                        return;
+                    },
+                    Some(VirtualKeyCode::R) => {
+                        main_camera.transform.set_position(Vector3::new(pos.x, pos.y, pos.z-5.0*mspeed));
+                        return;
+                    },
                     _ => return,
                 }
 
