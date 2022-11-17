@@ -2,6 +2,7 @@
 #![allow(unused_variables)]
 
 use cgmath::Vector3;
+use cgmath::Zero;
 use num::Float;
 use libm::cosf;
 use libm::sinf;
@@ -11,7 +12,7 @@ use libm::asinf;
 
 // norm of a vector2
 pub fn v3_norm <S: Float> (vec: Vector3<S>) -> S {
-    return (vec.x.powi(1) + vec.y.powi(2) + vec.z.powi(2)).sqrt();
+    return (vec.x.powi(2) + vec.y.powi(2) + vec.z.powi(2)).sqrt();
 }
 
 // normalised vector2
@@ -21,7 +22,7 @@ pub fn v3_normalised <S: Float> (vec: Vector3<S>) ->  Vector3<S> {
     
     // if the norm is zero
     // need to find a better solution
-    if res.x.is_nan() {
+    if norm.is_zero() {
         return vec;
     }
     else {
@@ -44,16 +45,29 @@ pub fn euler_to_quaternion (euler_rot: Vector3<f32>) -> Quaternion<f32> {
     let qx = sx * cy * cz - cx * sy * sz;
     let qy = cx * sy * cz + sx * cy * sz;
     let qz = cx * cy * sz - sx * sy * cz;
- 
-    return Quaternion::new(qw, qx, qy, qz);
+    
+    let new_quat = Quaternion::new(qw, qx, qy, qz);
+    return quaternion_normalised(new_quat);
+
 }
 
 pub fn quaternion_to_euler (q: Quaternion<f32>) -> Vector3<f32> {
     
     let x_rot = atan2f(2.0*(q.s * q.v.x + q.v.y * q.v.z), 1.0 - 2.0*(q.v.x * q.v.x + q.v.y * q.v.y));
-    let y_rot = asinf(2.0*(q.s * q.v.y - q.v.z * q.v.x));
+    // the ifs are necessary for some edge cases
+    let y_temp = 2.0*(q.s * q.v.y - q.v.z * q.v.x);
+    let y_rot;
+    if y_temp > 1.0 {
+        y_rot = asinf(1.0);
+    } else if y_temp < -1.0 {
+        y_rot = asinf(-1.0);
+    } else {
+        y_rot = asinf(y_temp);
+    }
     let z_rot = atan2f(2.0*(q.s * q.v.z + q.v.x * q.v.y), 1.0 - 2.0*(q.v.y * q.v.y + q.v.z * q.v.z));
-
+    
+    // rework this line, seems to work but needs to be relaxed with regards to minor imprecision
+    //assert_eq!(q, euler_to_quaternion(Vector3::new(x_rot, y_rot, z_rot)));
     return Vector3::new(x_rot, y_rot, z_rot);
 }
 
@@ -64,7 +78,7 @@ pub fn quaternion_to_euler (q: Quaternion<f32>) -> Vector3<f32> {
 pub struct Transform {
     position: Vector3<f32>,
     rotation: Vector3<f32>,
-    //rotation_quat: Quaternion<f32>,
+    rotation_quat: Quaternion<f32>,
     size: Vector3<f32>,
 }
 
@@ -78,10 +92,16 @@ impl Default for Transform {
 
 impl Transform {
    
+    // can only really print one of these, ugly but useful for quick debug
+    pub fn pretty_print (&self) -> () {
+        print!("\rPosition: x: {}, y: {}, z: {} -- Rotation: x: {}, y: {}, z: {}                      ", self.position.x, self.position.y, self.position.z, self.rotation.x*180.0/3.1415, self.rotation.y*180.0/3.1415, self.rotation.z*180.0/3.1415);
+    }
+
     pub fn new(pos: Vector3<f32>, rot: Vector3<f32>, size: Vector3<f32>) -> Transform {
         let res = Transform {
             position: pos,
             rotation: rot,
+            rotation_quat: euler_to_quaternion(rot),
             size: size,
         };
         return res;
@@ -94,21 +114,73 @@ impl Transform {
     pub fn get_rotation(&self) -> Vector3<f32> {
         return self.rotation;
     }
+    
+    pub fn rotate_by(&mut self, rot_delta: Vector3<f32>) -> () {
+        let delta_rot_quat = euler_to_quaternion(rot_delta);
+        self.rotation_quat = delta_rot_quat * self.rotation_quat;
+        self.rotation = quaternion_to_euler(self.rotation_quat);
+        //println!("quaternion roatation: {} {} {} {}", self.rotation_quat.s, self.rotation_quat.v.x, self.rotation_quat.v.y, self.rotation_quat.v.z);
+    }
 
     pub fn set_position(&mut self, new_pos: Vector3<f32>) -> () {
         self.position = new_pos;
     }
 
     pub fn set_rotation(&mut self, new_rot: Vector3<f32>) -> () {
+        self.rotation_quat = euler_to_quaternion(new_rot);
         self.rotation = new_rot;
     }
 }
 
+//pub fn quaternion_normalised <S: BaseFloat> (quat: Quaternion<S>) -> Quaternion<S> {
+pub fn quaternion_normalised (quat: Quaternion<f32>) -> Quaternion<f32> {
+    let norm = num::Float::sqrt(quat.s*quat.s + quat.v.x*quat.v.x + quat.v.y*quat.v.y + quat.v.z*quat.v.z);
+    if norm.is_zero() {
+        println!("hmm");
+        return quat;
+    }
+    else {
+        return quat / norm;
+    }
+}
+
+// TODO make this generic later
+pub fn quat_mult (quat1: Quaternion<f32>, quat2: Quaternion<f32>) -> Quaternion<f32> {
+    let s = quat1.s * quat2.s - quat1.v.x * quat2.v.x - quat1.v.y * quat2.v.y - quat1.v.z * quat2.v.z;
+    let vx = quat1.s * quat2.v.x + quat1.v.x * quat2.s + quat1.v.y * quat2.v.z - quat1.v.z * quat2.v.y;
+    let vy = quat1.s * quat2.v.y - quat1.v.x * quat2.v.z + quat1.v.y * quat2.s + quat1.v.z * quat2.v.x;
+    let vz = quat1.s * quat2.v.z + quat1.v.x * quat2.v.y - quat1.v.y * quat2.v.x + quat1.v.z * quat2.s;
+    let v = Vector3::new(vx, vy, vz);
+    let res = Quaternion::from_sv(s, v);
+
+    return res;
+}
+
+
+
 // get the direction from a rotation vector
-pub fn rotation_to_direction (rot: Vector3<f32>) -> Vector3<f32> {
-    let x_dir = (1.0) * sinf(rot.y) * cosf(rot.z);
-    let y_dir = (1.0) * sinf(rot.x) * cosf(rot.z);
-    let z_dir = (1.0) * cosf(rot.x) * cosf(rot.y);
-    return v3_normalised(Vector3::new(x_dir, y_dir, z_dir));
+pub fn rotation_to_direction (rot: Vector3<f32>, initial_dir: Vector3<f32>) -> Vector3<f32> {
+    let quat_rot = quaternion_normalised(euler_to_quaternion(rot));
+    //print!("\rhmm: {}", quaternion_to_euler(quat_rot).y);
+    //return v3_normalised(Vector3::new(x_dir, y_dir, z_dir));
+    //println!("quat_rot.v: {} {} {}", quat_rot.v.x, quat_rot.v.y, quat_rot.v.z);
+    //let new_quat = quat_rot * Quaternion::from_sv(0.0, initial_dir) * quat_rot.conjugate();
+    let quat_dir = Quaternion::from_sv(0.0, initial_dir);
+    let new_quat = quat_mult(quat_mult(quat_rot, quat_dir), quat_rot.conjugate());
+    let test = quat_mult(quat_rot, quat_dir);
+    //println!("initial direction: {} {} {}", initial_dir.x, initial_dir.y, initial_dir.z);
+    if initial_dir.z == 1.0 {
+        println!("new_quat vector value: {} {} {}", new_quat.v.x, new_quat.v.y, new_quat.v.z);
+        println!("test quat {} {} {} {}", test.s, test.v.x, test.v.y, test.v.z);
+    }
+    //println!("should always be 0: {}", new_quat.s);
+    // a faster way to multiply the vector and quaternion
+    
+    //let res = 2.0 * Vector3::dot(quat_rot.v, initial_dir) * quat_rot.v + (quat_rot.s * quat_rot.s - Vector3::dot(quat_rot.v, quat_rot.v)) * initial_dir + 2.0 * quat_rot.s * Vector3::cross(quat_rot.v, initial_dir);
+
+    //let t = 2.0 * Vector3::cross(quat_rot.v, initial_dir);
+    //let res = initial_dir + quat_rot.s * t + Vector3::cross(quat_rot.v, t);
+
+    return v3_normalised(new_quat.v);
 }
 

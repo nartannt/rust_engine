@@ -23,20 +23,28 @@ impl Camera {
         self.transform.set_position(new_pos);
     }
 
-    pub fn view_matrix (self, up: Vector3<f32>) -> [[f32; 4]; 4] {
-       
-        let dir = rotation_to_direction(self.transform.get_rotation());
+    pub fn view_matrix (self) -> [[f32; 4]; 4] {
+        let fwd = Vector3::new(0.0, 0.0, 1.0); 
+        let dir = rotation_to_direction(self.transform.get_rotation(), fwd);
+        //print!("\rfwd norm: {}", (dir.x*dir.x + dir.y*dir.y + dir.z*dir.z).sqrt());
+        //println!("relative forward: x: {}, y: {}, z: {}", dir.x, dir.y, dir.z);
         let dir_normalised = v3_normalised(dir);
         
         // vector that is orthogonal to the direction the camera is facing
-        // and the absolute up direction
+        // and the relative up direction of the camera
         // basically a relative right for the camera
-        let s = Vector3::cross(dir_normalised, up);
+        let up = Vector3::new(0.0, 1.0, 0.0);
+        let relative_up = rotation_to_direction(self.transform.get_rotation(), up);
+        let s = Vector3::cross(relative_up, dir_normalised);
         let s_normalised = v3_normalised(s);
     
 
         // similar thing, relative up for the camera
-        let u = Vector3::cross(dir_normalised, s_normalised);
+        //let u = Vector3::cross(dir_normalised, s_normalised);
+        let u = v3_normalised(Vector3::cross(dir_normalised, s_normalised));
+        //println!("u, recalculated: {} {} {}", u.x, u.y, u.z);
+        //print!("\rdirection: {} {} {}                   ", dir.x, dir.y, dir.z);
+        //let u = relative_up;
        
         
         let pos = self.transform.get_position();

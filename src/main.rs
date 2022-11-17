@@ -83,14 +83,13 @@ fn main() {
 
     let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
     
-    let mut t: f32 = -0.5;
+    let mut t: f32 = 0.0;
 
     let mut main_camera = Camera {
         transform: Transform::new(Vector3::new(0.0, 0.0, -5.0), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0)),
         fov: 0.1
     };
             
-    let up = Vector3::new(0.0, 1.0, 0.0);
 
 
     /*let view = [[1.0, 0.0, 0.0, 0.0],
@@ -121,19 +120,19 @@ fn main() {
                 },
                 glutin::event::WindowEvent::KeyboardInput {input, ..} => match input.virtual_keycode {
                     Some(VirtualKeyCode::Up) => {
-                        main_camera.transform.set_rotation(Vector3::new(rot.x+5.0*speed,rot.y,rot.z));
+                        main_camera.transform.rotate_by(Vector3::new(5.0*speed, 0.0, 0.0));
                         return;
                     },
                     Some(VirtualKeyCode::Down) => {
-                        main_camera.transform.set_rotation(Vector3::new(rot.x-5.0*speed,rot.y,rot.z));
+                        main_camera.transform.rotate_by(Vector3::new(-5.0*speed, 0.0, 0.0));
                         return;
                     },
                     Some(VirtualKeyCode::Right) => {
-                        main_camera.transform.set_rotation(Vector3::new(rot.x,rot.y+5.0*speed,rot.z));
+                        main_camera.transform.rotate_by(Vector3::new(0.0, 5.0*speed, 0.0));
                         return;
                     },
                     Some(VirtualKeyCode::Left) => {
-                        main_camera.transform.set_rotation(Vector3::new(rot.x,rot.y-5.0*speed,rot.z));
+                        main_camera.transform.rotate_by(Vector3::new(0.0, -5.0*speed, 0.0));
                         return;
                     },
                     Some(VirtualKeyCode::D) => {
@@ -168,7 +167,11 @@ fn main() {
             _ => (),
         }
         
-        t += 0.002;
+        //t += 0.002;
+        //t = 0.0;
+
+        //main_camera.transform.pretty_print();
+        main_camera.transform.rotate_by(Vector3::new(0.0, 0.0, 0.0)); 
         
         let mut target = display.draw();
         
@@ -180,8 +183,7 @@ fn main() {
             [0.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 2.0, 1.0f32],
         ];
-        
-        let view = main_camera.view_matrix(up);
+        let view = main_camera.view_matrix();
         
         let perspective = {
             let (width, height) = target.get_dimensions();
