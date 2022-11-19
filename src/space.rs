@@ -20,8 +20,6 @@ pub fn v3_normalised <S: Float> (vec: Vector3<S>) ->  Vector3<S> {
     let norm = v3_norm(vec);
     let res = vec.map(|x|{x/norm});
     
-    // if the norm is zero
-    // need to find a better solution
     if norm.is_zero() {
         return vec;
     }
@@ -47,6 +45,8 @@ pub fn euler_to_quaternion (euler_rot: Vector3<f32>) -> Quaternion<f32> {
     let qz = cx * cy * sz - sx * sy * cz;
     
     let new_quat = Quaternion::new(qw, qx, qy, qz);
+    //println!("prev rotation {} {} {}", euler_rot.x, euler_rot.y, euler_rot.z);
+    //println!("new quat {} {} {} {}", new_quat.s, new_quat.v.x, new_quat.v.y, new_quat.v.z);
     return quaternion_normalised(new_quat);
 
 }
@@ -144,7 +144,7 @@ pub fn quaternion_normalised (quat: Quaternion<f32>) -> Quaternion<f32> {
     }
 }
 
-// TODO make this generic later
+/*
 pub fn quat_mult (quat1: Quaternion<f32>, quat2: Quaternion<f32>) -> Quaternion<f32> {
     let s = quat1.s * quat2.s - quat1.v.x * quat2.v.x - quat1.v.y * quat2.v.y - quat1.v.z * quat2.v.z;
     let vx = quat1.s * quat2.v.x + quat1.v.x * quat2.s + quat1.v.y * quat2.v.z - quat1.v.z * quat2.v.y;
@@ -154,7 +154,7 @@ pub fn quat_mult (quat1: Quaternion<f32>, quat2: Quaternion<f32>) -> Quaternion<
     let res = Quaternion::from_sv(s, v);
 
     return res;
-}
+}*/
 
 
 
@@ -165,13 +165,12 @@ pub fn rotation_to_direction (rot: Vector3<f32>, initial_dir: Vector3<f32>) -> V
     //return v3_normalised(Vector3::new(x_dir, y_dir, z_dir));
     //println!("quat_rot.v: {} {} {}", quat_rot.v.x, quat_rot.v.y, quat_rot.v.z);
     //let new_quat = quat_rot * Quaternion::from_sv(0.0, initial_dir) * quat_rot.conjugate();
-    let quat_dir = Quaternion::from_sv(0.0, initial_dir);
-    let new_quat = quat_mult(quat_mult(quat_rot, quat_dir), quat_rot.conjugate());
-    let test = quat_mult(quat_rot, quat_dir);
+    let quat_dir = quaternion_normalised(Quaternion::from_sv(0.0, initial_dir));
+    let new_quat = quat_rot.conjugate() * quat_dir * quat_rot;
     //println!("initial direction: {} {} {}", initial_dir.x, initial_dir.y, initial_dir.z);
     if initial_dir.z == 1.0 {
         println!("new_quat vector value: {} {} {}", new_quat.v.x, new_quat.v.y, new_quat.v.z);
-        println!("test quat {} {} {} {}", test.s, test.v.x, test.v.y, test.v.z);
+        println!("quat_rot: {} {} {} {}", quat_rot.s, quat_rot.v.x, quat_rot.v.y, quat_rot.v.z);
     }
     //println!("should always be 0: {}", new_quat.s);
     // a faster way to multiply the vector and quaternion

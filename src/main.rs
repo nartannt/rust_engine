@@ -12,6 +12,7 @@ use crate::space::Transform;
 use crate::graphic_object::GraphicObject;
 use crate::graphic_object::load_model;
 use glutin::event::VirtualKeyCode;
+use crate::space::rotation_to_direction;
 
 mod graphic_object;
 mod teapot;
@@ -128,11 +129,11 @@ fn main() {
                         return;
                     },
                     Some(VirtualKeyCode::Right) => {
-                        main_camera.transform.rotate_by(Vector3::new(0.0, 5.0*speed, 0.0));
+                        main_camera.transform.rotate_by(Vector3::new(0.0, -5.0*speed, 0.0));
                         return;
                     },
                     Some(VirtualKeyCode::Left) => {
-                        main_camera.transform.rotate_by(Vector3::new(0.0, -5.0*speed, 0.0));
+                        main_camera.transform.rotate_by(Vector3::new(0.0, 5.0*speed, 0.0));
                         return;
                     },
                     Some(VirtualKeyCode::D) => {
@@ -152,11 +153,17 @@ fn main() {
                         return;
                     },
                     Some(VirtualKeyCode::E) => {
-                        main_camera.transform.set_position(Vector3::new(pos.x, pos.y, pos.z+5.0*mspeed));
+                        let fwd = Vector3::new(0.0, 0.0, 1.0);
+                        let cam_fwd = rotation_to_direction(main_camera.transform.get_rotation(), fwd);
+                        main_camera.transform.set_position(pos + cam_fwd * mspeed);
+                        //main_camera.transform.set_position(Vector3::new(pos.x, pos.y, pos.z+5.0*mspeed));
                         return;
                     },
                     Some(VirtualKeyCode::R) => {
-                        main_camera.transform.set_position(Vector3::new(pos.x, pos.y, pos.z-5.0*mspeed));
+                        let fwd = Vector3::new(0.0, 0.0, 1.0);
+                        let cam_fwd = rotation_to_direction(main_camera.transform.get_rotation(), fwd);
+                        main_camera.transform.set_position(pos - cam_fwd * mspeed);
+                        //main_camera.transform.set_position(Vector3::new(pos.x, pos.y, pos.z-5.0*mspeed));
                         return;
                     },
                     _ => return,
