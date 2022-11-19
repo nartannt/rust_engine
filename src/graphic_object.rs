@@ -1,36 +1,34 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use std::path::Path;
-use std::fs::File;
-use std::io::BufReader;
+use glium::Display;
+use glium::IndexBuffer;
+use glium::VertexBuffer;
+use obj::load_obj;
 use obj::Obj;
 use obj::ObjError;
-use obj::load_obj;
-use glium::VertexBuffer;
-use glium::IndexBuffer;
-use glium::Display;
+use std::fs::File;
+use std::io::BufReader;
+use std::path::Path;
 
-extern crate obj;
 extern crate glium;
-
+extern crate obj;
 
 use crate::Transform;
 
 #[derive(Copy, Clone)]
 pub struct Vertex {
-    position: (f32, f32, f32)
+    position: (f32, f32, f32),
 }
 
 implement_vertex!(Vertex, position);
 
 #[derive(Copy, Clone)]
 pub struct Normal {
-    normal: (f32, f32, f32)
+    normal: (f32, f32, f32),
 }
 
 implement_vertex!(Normal, normal);
-
 
 pub struct ObjectModel {
     pub vertices: glium::VertexBuffer<Vertex>,
@@ -42,19 +40,18 @@ pub struct ObjectModel {
 pub struct GraphicObject {
     pub transform: Transform,
     pub is_active: bool,
-    pub geometry: Option<ObjectModel>, 
+    pub geometry: Option<ObjectModel>,
 }
 
-pub fn load_model (model_file_path: &Path, display: &Display) -> Option<ObjectModel> {
-       
+pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectModel> {
     let file_result = File::open(model_file_path);
     match file_result {
-        Err (err) => {
+        Err(err) => {
             println!("Warning, failed to open file: {}", err);
             return None;
-        },
+        }
 
-        Ok (file) => {
+        Ok(file) => {
             let input = BufReader::new(file);
             let model_result: Result<Obj, ObjError> = load_obj(input);
             match model_result {
@@ -62,23 +59,44 @@ pub fn load_model (model_file_path: &Path, display: &Display) -> Option<ObjectMo
                     println!("Warning, failed to load object: {}", err);
                     return None;
                 }
-                Ok (model) => {
+                Ok(model) => {
                     let new_vertices: Vec<[f32; 3]>;
                     let new_normals: Vec<[f32; 3]>;
-                    (new_vertices, new_normals) = model.vertices.iter().map(|vertex| (vertex.position, vertex.normal)).unzip();
+                    (new_vertices, new_normals) = model
+                        .vertices
+                        .iter()
+                        .map(|vertex| (vertex.position, vertex.normal))
+                        .unzip();
 
                     // need to factorise this, possibly with the previous line to avoid doing
                     // two loops
                     let vertices_vec: Vec<Vertex>;
                     let normals_vec: Vec<Normal>;
-                    vertices_vec = new_vertices.iter().map(|vertex| Vertex {position: (vertex[0], vertex[1], vertex[2])}).collect();
-                    normals_vec = new_normals.iter().map(|normal| Normal {normal: (normal[0], normal[1], normal[2])}).collect();
-                    
+                    vertices_vec = new_vertices
+                        .iter()
+                        .map(|vertex| Vertex {
+                            position: (vertex[0], vertex[1], vertex[2]),
+                        })
+                        .collect();
+                    normals_vec = new_normals
+                        .iter()
+                        .map(|normal| Normal {
+                            normal: (normal[0], normal[1], normal[2]),
+                        })
+                        .collect();
+
                     let vertices_vertex_buffer = VertexBuffer::new(display, &vertices_vec);
                     let normals_vertex_buffer = VertexBuffer::new(display, &normals_vec);
-                    let indices_vertex_buffer = IndexBuffer::new(display, glium::index::PrimitiveType::TrianglesList, &model.indices);
+                    let indices_vertex_buffer = IndexBuffer::new(
+                        display,
+                        glium::index::PrimitiveType::TrianglesList,
+                        &model.indices,
+                    );
 
-                    if vertices_vertex_buffer.is_err() || normals_vertex_buffer.is_err() || indices_vertex_buffer.is_err() {
+                    if vertices_vertex_buffer.is_err()
+                        || normals_vertex_buffer.is_err()
+                        || indices_vertex_buffer.is_err()
+                    {
                         println!("Error, could not create index buffers for this object");
                         return None;
                     } else {
@@ -91,11 +109,8 @@ pub fn load_model (model_file_path: &Path, display: &Display) -> Option<ObjectMo
                         };
                         return Some(new_geometry);
                     }
-
                 }
             }
-            
         }
     }
 }
-
