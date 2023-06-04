@@ -1,9 +1,10 @@
 {
   inputs = {
     naersk.url = "github:nmattia/naersk/master";
+    nixgl.url = "github:guibou/nixGL/main";
     # This must be the stable nixpkgs if you're running the app on a
     # stable NixOS install.  Mixing EGL library versions doesn't work.
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     utils.url = "github:numtide/flake-utils";
     flake-compat = {
       url = github:edolstra/flake-compat;
@@ -11,7 +12,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, utils, naersk, ... }:
+  outputs = { self, nixpkgs, utils, naersk, nixgl, ... }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };

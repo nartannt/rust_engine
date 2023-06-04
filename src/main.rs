@@ -22,22 +22,36 @@ mod camera;
 mod fps_camera_controller;
 mod graphic_object;
 mod space;
-mod teapot;
 
 fn main() {
+    
+
+    /*print!("the tests happen here\n");
+    let rot_vec_y = Vector3::new(0.0, 3.141592/4.0, 0.0);
+    let rot_vec_x = Vector3::new(3.141592/4.0, 0.0, 0.0);
+    
+    let y_axis_rot = space::quaternion_normalised(space::euler_to_quaternion(rot_vec_y));
+    println!("x and y rotations in quat form");
+    space::print_quat(y_axis_rot);
+    let x_axis_rot = space::quaternion_normalised(space::euler_to_quaternion(rot_vec_x));
+    space::print_quat(x_axis_rot);
+
+    //let total_rot = x_axis_rot.conjugate() * y_axis_rot.conjugate() * x_axis_rot * y_axis_rot;
+    //let total_rot = space::quat_mul(space::quat_mul(space::quat_mul(x_axis_rot.conjugate(), y_axis_rot.conjugate()), x_axis_rot), y_axis_rot);
+    let total_rot = space::quat_mul(y_axis_rot.conjugate(), y_axis_rot);
+
+    //let dir = space::rotation_to_direction(total_rot, Vector3::new(0.0, 1.0, 0.0));
+
+    //println!("x: {}, y: {}, z: {}", dir.x, dir.y, dir.z);
+    println!("total quaternion rotation (should be a real number, modulo rounding errors)");
+    println!("w: {}, i: {}, j: {}, k: {}", total_rot.s, total_rot.v.x, total_rot.v.y, total_rot.v.z);*/
+
+
     let event_loop = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new();
     let cb = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display = glium::Display::new(wb, cb, &event_loop).unwrap();
 
-    let positions = glium::VertexBuffer::new(&display, &teapot::VERTICES).unwrap();
-    let normals = glium::VertexBuffer::new(&display, &teapot::NORMALS).unwrap();
-    let indices = glium::IndexBuffer::new(
-        &display,
-        glium::index::PrimitiveType::TrianglesList,
-        &teapot::INDICES,
-    )
-    .unwrap();
 
     let test_path = Path::new("src/test2.obj");
     let test = GraphicObject {
@@ -91,7 +105,6 @@ fn main() {
         glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
             .unwrap();
 
-    let mut t: f32 = 0.0;
 
     let mut main_camera = Camera {
         transform: Transform::new(
@@ -101,6 +114,7 @@ fn main() {
         ),
         fov: 0.1,
     };
+    
 
     event_loop.run(move |ev, _, control_flow| {
         let begin_frame_time = std::time::Instant::now();
@@ -110,28 +124,29 @@ fn main() {
         let rot = main_camera.transform.get_rotation();
         let pos = main_camera.transform.get_position();
 
+
         match ev {
             glutin::event::Event::WindowEvent { event, .. } => match event {
                 glutin::event::WindowEvent::CloseRequested => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
                     return;
                 }
-                _ =>  {update_camera(event, &mut main_camera);},
+                _ => {
+                    update_camera(event, &mut main_camera);
+                }
             },
             _ => (),
         }
 
-        t += 0.002;
 
-        main_camera.transform.rotate_by(Vector3::new(0.0, 0.0, 0.0));
 
         let mut target = display.draw();
 
         let light = [-1.0, 0.4, 0.9f32];
 
         let matrix = [
-            [t.cos(), t.sin(), 0.0, 0.0],
-            [-t.sin(), t.cos(), 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 2.0, 1.0f32],
         ];
