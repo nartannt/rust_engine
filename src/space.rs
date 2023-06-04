@@ -157,6 +157,9 @@ impl Transform {
         // this case (TODO: check that)
         let total_rot_quat = quaternion_normalised(z_rot * y_rot * x_rot);
 
+        //println!("x local axis - x: {}, y: {}, z: {}", local_x.x, local_x.y, local_x.z);
+        println!("y local axis - x: {}, y: {}, z: {}", local_y.x, local_y.y, local_y.z);
+
         self.rotation_quat = quaternion_normalised(total_rot_quat * self.rotation_quat);
         self.rotation = quaternion_to_euler(self.rotation_quat);
         
@@ -168,10 +171,10 @@ impl Transform {
         let world_x = Vector3::new(1.0, 0.0, 0.0);
         let local_x = rotation_to_direction(self.rotation_quat, world_x);
         
-        let world_y = Vector3::new(1.0, 0.0, 0.0);
+        let world_y = Vector3::new(0.0, 1.0, 0.0);
         let local_y = rotation_to_direction(self.rotation_quat, world_y);
        
-        let world_z = Vector3::new(1.0, 0.0, 0.0);
+        let world_z = Vector3::new(0.0, 0.0, 1.0);
         let local_z = rotation_to_direction(self.rotation_quat, world_z);
 
         return (local_x, local_y, local_z);

@@ -35,8 +35,8 @@ fn execute_camera_instr(instr: CamInstr, camera: &mut Camera) -> () {
             // but when rotating "up" or "down" we want to rotate around the local x axis (the
             // camera right)
             // (same thing for the z axis)
-            camera.transform.rotate_by_world(Vector3::new(0.0, delta_rot.y, 0.0));
-            camera.transform.rotate_by_local(Vector3::new(delta_rot.x, 0.0, delta_rot.z));
+            camera.transform.rotate_by_local(Vector3::new(0.0, delta_rot.y, 0.0));
+            camera.transform.rotate_by_world(Vector3::new(delta_rot.x, 0.0, delta_rot.z));
             
         }
 
