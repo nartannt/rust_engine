@@ -24,12 +24,10 @@ mod graphic_object;
 mod space;
 
 fn main() {
-    
-
     /*print!("the tests happen here\n");
     let rot_vec_y = Vector3::new(0.0, 3.141592/4.0, 0.0);
     let rot_vec_x = Vector3::new(3.141592/4.0, 0.0, 0.0);
-    
+
     let y_axis_rot = space::quaternion_normalised(space::euler_to_quaternion(rot_vec_y));
     println!("x and y rotations in quat form");
     space::print_quat(y_axis_rot);
@@ -46,12 +44,10 @@ fn main() {
     println!("total quaternion rotation (should be a real number, modulo rounding errors)");
     println!("w: {}, i: {}, j: {}, k: {}", total_rot.s, total_rot.v.x, total_rot.v.y, total_rot.v.z);*/
 
-
     let event_loop = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new();
     let cb = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display = glium::Display::new(wb, cb, &event_loop).unwrap();
-
 
     let test_path = Path::new("src/test2.obj");
     let test = GraphicObject {
@@ -105,7 +101,6 @@ fn main() {
         glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
             .unwrap();
 
-
     let mut main_camera = Camera {
         transform: Transform::new(
             Vector3::new(0.0, 0.0, -5.0),
@@ -114,7 +109,6 @@ fn main() {
         ),
         fov: 0.1,
     };
-    
 
     event_loop.run(move |ev, _, control_flow| {
         let begin_frame_time = std::time::Instant::now();
@@ -123,7 +117,6 @@ fn main() {
 
         let rot = main_camera.transform.get_rotation();
         let pos = main_camera.transform.get_position();
-
 
         match ev {
             glutin::event::Event::WindowEvent { event, .. } => match event {
@@ -137,8 +130,6 @@ fn main() {
             },
             _ => (),
         }
-
-
 
         let mut target = display.draw();
 

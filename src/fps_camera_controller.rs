@@ -32,18 +32,23 @@ fn execute_camera_instr(instr: CamInstr, camera: &mut Camera) -> () {
 
         CamInstr::Rotate(delta_rot) => {
             // we want to rotate around the world y axis when we look "side to side"
-            // but when rotating "up" or "down" we want to rotate around the local x axis (the
-            // camera right)
-            // (same thing for the z axis)
-            camera.transform.rotate_by_local(Vector3::new(0.0, delta_rot.y, 0.0));
-            camera.transform.rotate_by_world(Vector3::new(delta_rot.x, 0.0, delta_rot.z));
-            
+            // but when rotating "up" or "down" we want to rotate around the local x axis
+            // ie. the camera right/left (same thing for the z axis)
+            camera
+                .transform
+                .rotate_by_world(Vector3::new(0.0, delta_rot.y, 0.0));
+            camera
+                .transform
+                .rotate_by_local(Vector3::new(delta_rot.x, 0.0, delta_rot.z));
         }
 
         CamInstr::PrintTransform() => {
             let cam_fwd = camera.get_fwd();
-            print!("cam fwd: x={}, y={}, z={}\n", cam_fwd.x, cam_fwd.y, cam_fwd.z);
-            let cam_up= camera.get_up();
+            print!(
+                "cam fwd: x={}, y={}, z={}\n",
+                cam_fwd.x, cam_fwd.y, cam_fwd.z
+            );
+            let cam_up = camera.get_up();
             print!("cam up: x={}, y={}, z={}\n", cam_up.x, cam_up.y, cam_up.z);
             camera.transform.print_transform();
         }
@@ -52,7 +57,7 @@ fn execute_camera_instr(instr: CamInstr, camera: &mut Camera) -> () {
 
 fn get_camera_instr(event: glutin::event::WindowEvent, camera: &Camera) -> CamInstr {
     let mspeed = 0.5;
-    let rspeed = (3.1415 / 180.0) * 1.0;
+    let rspeed = (3.1415 / 180.0) * 2.0;
     let pos = camera.transform.get_position();
     let fwd = Vector3::new(0.0, 0.0, 1.0);
     match event {

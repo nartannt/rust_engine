@@ -43,18 +43,7 @@ pub fn euler_to_quaternion(euler_rot: Vector3<f32>) -> Quaternion<f32> {
 
     let new_quat = Quaternion::new(qw, qx, qy, qz);
 
-    /*if (euler_rot.x*1000.0).round() == 0.0 {
-        print!("y rot\n");
-        print!("quat_rot: {} {} {}\n", qx, qy, qz);
-    }
-    if (euler_rot.y*1000.0).round() == 0.0 {
-        print!("x rot\n");
-        print!("quat_rot: {} {} {}\n", qx, qy, qz);
-    }*/
-
     return quaternion_normalised(new_quat);
-
-
 }
 
 pub fn quaternion_to_euler(q: Quaternion<f32>) -> Vector3<f32> {
@@ -76,7 +65,7 @@ pub fn quaternion_to_euler(q: Quaternion<f32>) -> Vector3<f32> {
         2.0 * (q.s * q.v.z + q.v.x * q.v.y),
         1.0 - 2.0 * (q.v.y * q.v.y + q.v.z * q.v.z),
     );
-    
+
     let res = Vector3::new(x_rot, y_rot, z_rot);
     //assert!(euler_to_quaternion(res) == q);
     return res;
@@ -122,47 +111,32 @@ impl Transform {
         return self.rotation;
     }
 
-    pub fn get_qrot(&self) -> Quaternion <f32> {
+    pub fn get_qrot(&self) -> Quaternion<f32> {
         return self.rotation_quat;
     }
 
-
-    // rotates the object relative to the world x, y and z axis
-    pub fn rotate_by_world(&mut self, rot_delta: Vector3<f32>) -> () {
+    // rotates the object relative to its x, y and z axis
+    // the computations actually correspond to that of a global rotation but due to some inversion
+    // when calculating the view matrix, it results in a local rotation
+    pub fn rotate_by_local(&mut self, rot_delta: Vector3<f32>) -> () {
         let delta_rot_quat = euler_to_quaternion(rot_delta);
         self.rotation_quat = quaternion_normalised(delta_rot_quat * self.rotation_quat);
         self.rotation = quaternion_to_euler(self.rotation_quat);
-
-        // not necessary but a nice check to make sure our functions work properly
-        // could possibly be used to empirically test the precision we work at
-        //println!("{}", (euler_to_quaternion(self.rotation)*10000.0).s - (self.get_qrot() * 10000.0).s);
-        /*println!("{}", self.rotation.x);
-        println!("{}", quaternion_to_euler(self.get_qrot()).x);
-        println!("{}", euler_to_quaternion(self.rotation).s);
-        println!("{}", self.get_qrot().s);*/
-        assert!((euler_to_quaternion(self.rotation)*10000.0).s.round() == (self.get_qrot() * 10000.0).s.round());
-        assert!((euler_to_quaternion(self.rotation)*10000.0).v.x.round()==(self.get_qrot()*10000.0).v.x.round());
-        assert!((euler_to_quaternion(self.rotation)*10000.0).v.y.round()==(self.get_qrot()*10000.0).v.y.round());
-        assert!((euler_to_quaternion(self.rotation)*10000.0).v.z.round()==(self.get_qrot()*10000.0).v.z.round());
     }
 
-    // rotates the object along its local x, y and z axis
-    pub fn rotate_by_local(&mut self, rot_delta: Vector3<f32>) -> () {
+    // rotates the object along the world x, y and z axes
+    pub fn rotate_by_world(&mut self, rot_delta: Vector3<f32>) -> () {
         // multiply by quaternion of rotation around local_x by rot_delta.x (same for the rest)
         let (local_x, local_y, local_z) = self.local_axes();
-        let x_rot = Quaternion::from_sv(cosf(rot_delta.x/2.0), sinf(rot_delta.x/2.0) * local_x);
-        let y_rot = Quaternion::from_sv(cosf(rot_delta.y/2.0), sinf(rot_delta.y/2.0) * local_y);
-        let z_rot = Quaternion::from_sv(cosf(rot_delta.z/2.0), sinf(rot_delta.z/2.0) * local_z);
+        let x_rot = Quaternion::from_sv(cosf(rot_delta.x / 2.0), sinf(rot_delta.x / 2.0) * local_x);
+        let y_rot = Quaternion::from_sv(cosf(rot_delta.y / 2.0), sinf(rot_delta.y / 2.0) * local_y);
+        let z_rot = Quaternion::from_sv(cosf(rot_delta.z / 2.0), sinf(rot_delta.z / 2.0) * local_z);
         // quaternion multiplication is not commutative, however, the order shouldn't matter in
-        // this case (TODO: check that)
+        // this case, (can be shown by a quick calculation)
         let total_rot_quat = quaternion_normalised(z_rot * y_rot * x_rot);
-
-        //println!("x local axis - x: {}, y: {}, z: {}", local_x.x, local_x.y, local_x.z);
-        println!("y local axis - x: {}, y: {}, z: {}", local_y.x, local_y.y, local_y.z);
 
         self.rotation_quat = quaternion_normalised(total_rot_quat * self.rotation_quat);
         self.rotation = quaternion_to_euler(self.rotation_quat);
-        
     }
 
     // returns a tuple with the local x, y and z axes
@@ -170,15 +144,14 @@ impl Transform {
     pub fn local_axes(&self) -> (Vector3<f32>, Vector3<f32>, Vector3<f32>) {
         let world_x = Vector3::new(1.0, 0.0, 0.0);
         let local_x = rotation_to_direction(self.rotation_quat, world_x);
-        
+
         let world_y = Vector3::new(0.0, 1.0, 0.0);
         let local_y = rotation_to_direction(self.rotation_quat, world_y);
-       
+
         let world_z = Vector3::new(0.0, 0.0, 1.0);
         let local_z = rotation_to_direction(self.rotation_quat, world_z);
 
         return (local_x, local_y, local_z);
-        
     }
 
     pub fn set_position(&mut self, new_pos: Vector3<f32>) -> () {
@@ -191,9 +164,15 @@ impl Transform {
     }
 
     pub fn print_transform(self) -> () {
-        let euler_rot = quaternion_to_euler(self.rotation_quat) * (360.0/(2.0*3.141592));
-        println!("rotation - x={}, y={}, z={}", euler_rot.x, euler_rot.y, euler_rot.z);
-        println!("position - x={}, y={}, z={}", self.position.x, self.position.y, self.position.z);
+        let euler_rot = quaternion_to_euler(self.rotation_quat) * (360.0 / (2.0 * 3.141592));
+        println!(
+            "rotation - x={}, y={}, z={}",
+            euler_rot.x, euler_rot.y, euler_rot.z
+        );
+        println!(
+            "position - x={}, y={}, z={}",
+            self.position.x, self.position.y, self.position.z
+        );
         println!("");
     }
 }
@@ -209,32 +188,24 @@ pub fn quaternion_normalised(quat: Quaternion<f32>) -> Quaternion<f32> {
     } else {
         // should be allowed to do this
         if quat.s < 0.0 {
-            return - quat / norm;
+            return -quat / norm;
         } else {
             return quat / norm;
         }
     }
 }
 
-// i shouldn't have to do this, the implementation in cgmath looks correct, mainly for testing /
-// debugging purposes, in fact i am copy pasting bits of the source code
-pub fn quat_mul (lhs: Quaternion<f32>, rhs: Quaternion<f32>) -> Quaternion<f32> {
-    let new_s = lhs.s * rhs.s - lhs.v.x * rhs.v.x - lhs.v.y * rhs.v.y - lhs.v.z * rhs.v.z;
-    let new_v_x = lhs.s * rhs.v.x + lhs.v.x * rhs.s + lhs.v.y * rhs.v.z - lhs.v.z * rhs.v.y;
-    let new_v_y = lhs.s * rhs.v.y + lhs.v.y * rhs.s + lhs.v.z * rhs.v.x - lhs.v.x * rhs.v.z;
-    let new_v_z = lhs.s * rhs.v.z + lhs.v.z * rhs.s + lhs.v.x * rhs.v.y - lhs.v.y * rhs.v.x;
-    return Quaternion::new(new_s, new_v_x, new_v_y, new_v_z);
-}
-
 // get the vector rotated by rot
 pub fn rotation_to_direction(rot: Quaternion<f32>, initial_dir: Vector3<f32>) -> Vector3<f32> {
     let quat_dir = quaternion_normalised(Quaternion::from_sv(0.0, initial_dir));
     let new_quat = rot * quat_dir * rot.conjugate();
-    //let new_quat = rot.conjugate() * quat_dir * rot;
 
     return v3_normalised(new_quat.v);
 }
 
 pub fn print_quat(quat: Quaternion<f32>) -> () {
-    println!("w: {}, i: {}, j: {}, k: {}", quat.s, quat.v.x, quat.v.y, quat.v.z);
+    println!(
+        "w: {}, i: {}, j: {}, k: {}",
+        quat.s, quat.v.x, quat.v.y, quat.v.z
+    );
 }

@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use cgmath::Vector3;
 use cgmath::Quaternion;
+use cgmath::Vector3;
 
-use crate::space::rotation_to_direction;
 use crate::space::quaternion_normalised;
+use crate::space::rotation_to_direction;
 use crate::space::v3_normalised;
 use crate::space::Transform;
 
@@ -44,7 +44,6 @@ impl Camera {
         return fwd_vec_n;
     }
     pub fn view_matrix(self) -> [[f32; 4]; 4] {
-
         let fwd = Vector3::new(0.0, 0.0, 1.0);
         let up = Vector3::new(0.0, 1.0, 0.0);
         let position = self.transform.get_position();
@@ -66,9 +65,10 @@ impl Camera {
         let u = Vector3::cross(f, s_norm);
 
         let p = [
-             -position[0] * s_norm[0] - position[1] * s_norm[1] - position[2] * s_norm[2],
-             -position[0] * u[0] - position[1] * u[1] - position[2] * u[2],
-             -position[0] * f[0] - position[1] * f[1] - position[2] * f[2]];
+            -position[0] * s_norm[0] - position[1] * s_norm[1] - position[2] * s_norm[2],
+            -position[0] * u[0] - position[1] * u[1] - position[2] * u[2],
+            -position[0] * f[0] - position[1] * f[1] - position[2] * f[2],
+        ];
 
         let res = [
             [s_norm[0], u[0], f[0], 0.0],
@@ -78,6 +78,5 @@ impl Camera {
         ];
 
         return res;
-
     }
 }
