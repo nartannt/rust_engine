@@ -24,26 +24,6 @@ mod graphic_object;
 mod space;
 
 fn main() {
-    /*print!("the tests happen here\n");
-    let rot_vec_y = Vector3::new(0.0, 3.141592/4.0, 0.0);
-    let rot_vec_x = Vector3::new(3.141592/4.0, 0.0, 0.0);
-
-    let y_axis_rot = space::quaternion_normalised(space::euler_to_quaternion(rot_vec_y));
-    println!("x and y rotations in quat form");
-    space::print_quat(y_axis_rot);
-    let x_axis_rot = space::quaternion_normalised(space::euler_to_quaternion(rot_vec_x));
-    space::print_quat(x_axis_rot);
-
-    //let total_rot = x_axis_rot.conjugate() * y_axis_rot.conjugate() * x_axis_rot * y_axis_rot;
-    //let total_rot = space::quat_mul(space::quat_mul(space::quat_mul(x_axis_rot.conjugate(), y_axis_rot.conjugate()), x_axis_rot), y_axis_rot);
-    let total_rot = space::quat_mul(y_axis_rot.conjugate(), y_axis_rot);
-
-    //let dir = space::rotation_to_direction(total_rot, Vector3::new(0.0, 1.0, 0.0));
-
-    //println!("x: {}, y: {}, z: {}", dir.x, dir.y, dir.z);
-    println!("total quaternion rotation (should be a real number, modulo rounding errors)");
-    println!("w: {}, i: {}, j: {}, k: {}", total_rot.s, total_rot.v.x, total_rot.v.y, total_rot.v.z);*/
-
     let event_loop = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new();
     let cb = glutin::ContextBuilder::new().with_depth_buffer(24);
@@ -184,6 +164,10 @@ fn main() {
 
         let next_frame_time = begin_frame_time + std::time::Duration::from_nanos(16_666_667);
 
+        if std::time::Instant::now() > next_frame_time {
+            println!("needed more time for this frame");
+        }
+        
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
     });
 }

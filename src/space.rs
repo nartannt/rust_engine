@@ -125,6 +125,7 @@ impl Transform {
     }
 
     // rotates the object along the world x, y and z axes
+    // same thing, computes local rotation but the result is a world rotation
     pub fn rotate_by_world(&mut self, rot_delta: Vector3<f32>) -> () {
         // multiply by quaternion of rotation around local_x by rot_delta.x (same for the rest)
         let (local_x, local_y, local_z) = self.local_axes();
@@ -177,7 +178,6 @@ impl Transform {
     }
 }
 
-// TODO generalise function
 pub fn quaternion_normalised(quat: Quaternion<f32>) -> Quaternion<f32> {
     let norm = num::Float::sqrt(
         quat.s * quat.s + quat.v.x * quat.v.x + quat.v.y * quat.v.y + quat.v.z * quat.v.z,

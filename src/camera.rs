@@ -26,23 +26,14 @@ impl Camera {
 
     pub fn get_fwd(self) -> Vector3<f32> {
         let fwd = Vector3::new(0.0, 0.0, 1.0);
-        let fwd_quat = Quaternion::from_sv(0.0, fwd);
-        let fwd_quat_n = quaternion_normalised(fwd_quat);
-        let cam_rot = self.transform.get_qrot();
-        let local_fwd_quat = cam_rot * fwd_quat_n * cam_rot.conjugate();
-        let fwd_vec_n = v3_normalised(local_fwd_quat.v);
-        return fwd_vec_n;
+        return rotation_to_direction(self.transform.get_qrot(), fwd);
     }
 
     pub fn get_up(self) -> Vector3<f32> {
-        let fwd = Vector3::new(0.0, 1.0, 0.0);
-        let fwd_quat = Quaternion::from_sv(0.0, fwd);
-        let fwd_quat_n = quaternion_normalised(fwd_quat);
-        let cam_rot = self.transform.get_qrot();
-        let local_fwd_quat = cam_rot * fwd_quat_n * cam_rot.conjugate();
-        let fwd_vec_n = v3_normalised(local_fwd_quat.v);
-        return fwd_vec_n;
+        let up = Vector3::new(0.0, 1.0, 0.0);
+        return rotation_to_direction(self.transform.get_qrot(), up);
     }
+
     pub fn view_matrix(self) -> [[f32; 4]; 4] {
         let fwd = Vector3::new(0.0, 0.0, 1.0);
         let up = Vector3::new(0.0, 1.0, 0.0);

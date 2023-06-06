@@ -60,6 +60,10 @@ fn get_camera_instr(event: glutin::event::WindowEvent, camera: &Camera) -> CamIn
     let rspeed = (3.1415 / 180.0) * 2.0;
     let pos = camera.transform.get_position();
     let fwd = Vector3::new(0.0, 0.0, 1.0);
+    // this implementation is satisfactory for tests, but not for actual use
+    // TODO need to return lists such that multiple key presses can be registered at once
+    // TODO need to use mouse movement to rotate camera
+    // TODO move relative to the camera fwd for (same for strafing left/right)
     match event {
         glutin::event::WindowEvent::KeyboardInput { input, .. } => match input.virtual_keycode {
             Some(VirtualKeyCode::Up) => {
