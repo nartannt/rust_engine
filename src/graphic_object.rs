@@ -37,8 +37,7 @@ pub struct ObjectModel {
 }
 
 #[derive(Default)]
-pub struct GraphicObject {
-    pub transform: Transform,
+pub struct GraphicComponent {
     pub is_active: bool,
     pub geometry: Option<ObjectModel>,
 }

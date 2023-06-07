@@ -10,18 +10,20 @@ extern crate libm;
 use crate::camera::Camera;
 use crate::fps_camera_controller::update_camera;
 use crate::graphic_object::load_model;
-use crate::graphic_object::GraphicObject;
+use crate::graphic_object::GraphicComponent;
 use crate::space::rotation_to_direction;
 use crate::space::Transform;
 use cgmath::Vector3;
 use glium::Surface;
 use glutin::event::VirtualKeyCode;
 use std::path::Path;
+use crate::scene::Scene;
 
 mod camera;
 mod fps_camera_controller;
 mod graphic_object;
 mod space;
+mod scene;
 
 fn main() {
     let event_loop = glutin::event_loop::EventLoop::new();
@@ -30,8 +32,7 @@ fn main() {
     let display = glium::Display::new(wb, cb, &event_loop).unwrap();
 
     let test_path = Path::new("src/test2.obj");
-    let test = GraphicObject {
-        transform: Transform::default(),
+    let test = GraphicComponent{
         is_active: true,
         geometry: load_model(test_path, &display),
     };
