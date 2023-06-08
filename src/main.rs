@@ -18,6 +18,7 @@ use glium::Surface;
 use glutin::event::VirtualKeyCode;
 use std::path::Path;
 use crate::scene::Scene;
+use crate::graphic_object::load_shaders;
 
 mod camera;
 mod fps_camera_controller;
@@ -32,16 +33,12 @@ fn main() {
     let display = glium::Display::new(wb, cb, &event_loop).unwrap();
 
     let test_path = Path::new("src/test2.obj");
-    let test = GraphicComponent{
-        is_active: true,
-        geometry: load_model(test_path, &display),
-    };
 
-    let test_geometry = test.geometry.unwrap();
 
-    let positions = test_geometry.vertices;
-    let normals = test_geometry.normals;
-    let indices = test_geometry.indices;
+    // how do we want to manage shaders? - hide them inside graphic objects
+    // do we store them as programs or do we turn them into programs? - we store them as strings
+    // and we turn them into programs later
+    // where do we store them, as a seperate file?
 
     let vertex_shader_src = r#"
         #version 150
@@ -78,9 +75,22 @@ fn main() {
         }
     "#;
 
-    let program =
-        glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
-            .unwrap();
+    let test = GraphicComponent{
+        is_active: true,
+        geometry: load_model(test_path, &display),
+        program: None,
+        vertex_shader: vertex_shader_src,
+        fragment_shader: fragment_shader_src
+    };
+
+    let program = load_shaders(&test, &display).unwrap();
+    // using unwrap is unecessarily destructive, isn't much of problem for now, if it does become
+    // problematic will need to find elegant way to unwrap
+    let test_geometry = test.geometry.unwrap();
+
+    let positions = test_geometry.vertices;
+    let normals = test_geometry.normals;
+    let indices = test_geometry.indices;
 
     let mut main_camera = Camera {
         transform: Transform::new(
@@ -93,8 +103,6 @@ fn main() {
 
     event_loop.run(move |ev, _, control_flow| {
         let begin_frame_time = std::time::Instant::now();
-        let speed = (3.1415 / 180.0) * 0.25f32;
-        let mspeed = 0.1f32;
 
         let rot = main_camera.transform.get_rotation();
         let pos = main_camera.transform.get_position();
@@ -152,6 +160,9 @@ fn main() {
         };
 
         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
+        // we need a different draw call for each object
+        // we can use the same draw call for objects with the same shaders
+        // how do we figure that out? - optimisation to be left for later
         target
             .draw(
                 (&positions, &normals),

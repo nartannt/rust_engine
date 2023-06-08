@@ -5,14 +5,14 @@ use crate::graphic_object::GraphicComponent;
 use crate::space::Transform;
 
 #[derive(Default)]
-pub struct GameObject {
+pub struct GameObject<'a> {
     pub active: bool,
-    pub graphic_component: Option<GraphicComponent>,
+    pub graphic_component: Option<GraphicComponent<'a>>,
     pub transform: Transform
 }
 
 
-pub struct Scene {
+pub struct Scene<'a> {
     pub active: bool,
-    pub game_objects: [GameObject]
+    pub game_objects: [GameObject<'a>]
 }
