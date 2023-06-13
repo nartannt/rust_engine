@@ -43,6 +43,7 @@ pub struct ObjectModel {
 // i want to approach things in a clean and generic manner
 // however, in order to keep things grounded, i won't implement a generic trait or method unless it
 // is used more than once
+// will also want components to be able to point to their parents
 #[derive(Default)]
 pub struct GraphicComponent <'a>{
     pub is_active: bool,
@@ -50,6 +51,19 @@ pub struct GraphicComponent <'a>{
     pub program: Option<Program>,
     pub vertex_shader: &'a str,
     pub fragment_shader: &'a str
+}
+
+impl <'a> GraphicComponent<'a> {
+    // the lifetime is way too long, we only need the matrix for a single frame
+    // could be solved by passing a mut as parameter and modifying that but it seems disgusting
+   pub fn get_uniform_matrix (transform: Transform) -> &'a[&'a[f32; 4]; 4] {
+       return &[
+            &[1.0, 0.0, 0.0, 0.0],
+            &[0.0, 1.0, 0.0, 0.0],
+            &[0.0, 0.0, 1.0, 0.0],
+            &[0.0, 0.0, 0.0, 1.0f32],
+       ];
+    }
 }
 
 pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectModel> {

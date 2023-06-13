@@ -9,6 +9,7 @@ extern crate libm;
 
 use crate::camera::Camera;
 use crate::fps_camera_controller::update_camera;
+use crate::scene::GameObject;
 use crate::graphic_object::load_model;
 use crate::graphic_object::GraphicComponent;
 use crate::space::rotation_to_direction;
@@ -75,7 +76,7 @@ fn main() {
         }
     "#;
 
-    let test = GraphicComponent{
+    let viking_house_gc = GraphicComponent{
         is_active: true,
         geometry: load_model(test_path, &display),
         program: None,
@@ -83,14 +84,31 @@ fn main() {
         fragment_shader: fragment_shader_src
     };
 
-    let program = load_shaders(&test, &display).unwrap();
+    let mut viking_house_go = GameObject{
+        is_active: true,
+        graphic_component: Some(&viking_house_gc),
+        transform: Transform::new(
+            Vector3::new(0.0, 0.0, 0.0),
+            Vector3::new(0.0, 0.0, 0.0),
+            Vector3::new(1.0, 1.0, 1.0)
+        )
+    };
+
+    let main_scene = Scene {
+        is_active: true,
+        game_objects: &mut[&mut viking_house_go]
+    };
+
+
+    let program = load_shaders(&viking_house_gc, &display).unwrap();
+
     // using unwrap is unecessarily destructive, isn't much of problem for now, if it does become
     // problematic will need to find elegant way to unwrap
-    let test_geometry = test.geometry.unwrap();
+    let viking_house_geometry = viking_house_gc.geometry.unwrap();
 
-    let positions = test_geometry.vertices;
-    let normals = test_geometry.normals;
-    let indices = test_geometry.indices;
+    let positions = viking_house_geometry.vertices;
+    let normals = viking_house_geometry.normals;
+    let indices = viking_house_geometry.indices;
 
     let mut main_camera = Camera {
         transform: Transform::new(
@@ -103,9 +121,6 @@ fn main() {
 
     event_loop.run(move |ev, _, control_flow| {
         let begin_frame_time = std::time::Instant::now();
-
-        let rot = main_camera.transform.get_rotation();
-        let pos = main_camera.transform.get_position();
 
         match ev {
             glutin::event::Event::WindowEvent { event, .. } => match event {
@@ -122,13 +137,15 @@ fn main() {
 
         let mut target = display.draw();
 
+        // need to have the lights in the scene
         let light = [-1.0, 0.4, 0.9f32];
 
+        // depends on the transform of each object
         let matrix = [
             [1.0, 0.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 2.0, 1.0f32],
+            [0.0, 0.0, 1.0, 1.0f32],
         ];
         let view = main_camera.view_matrix();
 
@@ -159,7 +176,9 @@ fn main() {
             ..Default::default()
         };
 
+        // refreshes the background colour 
         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
+
         // we need a different draw call for each object
         // we can use the same draw call for objects with the same shaders
         // how do we figure that out? - optimisation to be left for later
@@ -179,7 +198,7 @@ fn main() {
         if std::time::Instant::now() > next_frame_time {
             println!("needed more time for this frame");
         }
-        
+
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
     });
 }

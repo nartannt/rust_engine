@@ -6,13 +6,14 @@ use crate::space::Transform;
 
 #[derive(Default)]
 pub struct GameObject<'a> {
-    pub active: bool,
-    pub graphic_component: Option<GraphicComponent<'a>>,
+    pub is_active: bool,
+    // will need to transform this into a list of components
+    pub graphic_component: Option<&'a GraphicComponent<'a>>,
     pub transform: Transform
 }
 
 
 pub struct Scene<'a> {
-    pub active: bool,
-    pub game_objects: [GameObject<'a>]
+    pub is_active: bool,
+    pub game_objects: &'a mut [&'a mut GameObject<'a>]
 }
