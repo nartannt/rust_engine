@@ -33,6 +33,17 @@ pub struct Normal {
 
 implement_vertex!(Normal, normal);
 
+// this should be in its own file TODO
+// also need to find a better name
+pub trait ComponentTrait<'a> {
+    fn is_active(&self) -> bool;
+    fn set_active(&mut self, activation: bool) -> ();
+
+    // it would be great to find a more graceful way to handle this (i don't have any ideas)
+    fn component_type(&self) -> &'a str;
+}
+
+
 pub struct ObjectModel {
     pub vertices: glium::VertexBuffer<Vertex>,
     pub normals: glium::VertexBuffer<Normal>,
@@ -63,6 +74,51 @@ impl <'a> GraphicComponent<'a> {
             &[0.0, 0.0, 1.0, 0.0],
             &[0.0, 0.0, 0.0, 1.0f32],
        ];
+    }
+    
+
+}
+
+impl <'a> ComponentTrait<'a> for GraphicComponent<'a> {
+    
+    fn is_active(&self) -> bool {
+       return self.is_active;
+    }
+    
+    fn set_active(&mut self, activation: bool) {
+        self.is_active = activation;
+    }
+
+    fn component_type (&self) -> &'a str {
+        return &"graphic";
+    }
+
+}
+
+// should be in its own file TODO
+// TODO i will need to derive ComponentTrait for Component by using the implementations of its members
+// will require a new crate that generates a derive macro
+// in the meantime whilst i only have a couple of different components, i'll do it by hand
+pub enum Component<'a> {
+    GraphicComponent(GraphicComponent<'a>)
+}
+
+impl <'a> ComponentTrait<'a> for Component<'a> {
+    fn is_active(&self) -> bool {
+        match self {
+            Component::GraphicComponent(gc) => GraphicComponent::<'_>::is_active(&gc)
+        }
+    }
+    fn set_active(&mut self, activation: bool) {
+        match self {
+            Component::GraphicComponent(ref mut gc) => gc.set_active(activation)
+        }
+
+    }
+    fn component_type(&self) -> &'a str {
+        match self {
+            Component::GraphicComponent(gc) => GraphicComponent::<'_>::component_type(&gc)
+        }
     }
 }
 

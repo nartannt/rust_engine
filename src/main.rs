@@ -20,6 +20,8 @@ use glutin::event::VirtualKeyCode;
 use std::path::Path;
 use crate::scene::Scene;
 use crate::graphic_object::load_shaders;
+use crate::graphic_object::Component;
+use crate::Component::GraphicComponent as GC;
 
 mod camera;
 mod fps_camera_controller;
@@ -76,22 +78,23 @@ fn main() {
         }
     "#;
 
-    let viking_house_gc = GraphicComponent{
+    let mut viking_house_gc =  GC(
+        GraphicComponent{
         is_active: true,
         geometry: load_model(test_path, &display),
         program: None,
         vertex_shader: vertex_shader_src,
         fragment_shader: fragment_shader_src
-    };
+    });
 
     let mut viking_house_go = GameObject{
         is_active: true,
-        graphic_component: Some(&viking_house_gc),
         transform: Transform::new(
             Vector3::new(0.0, 0.0, 0.0),
             Vector3::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 1.0, 1.0)
-        )
+        ),
+        components: &mut[&mut viking_house_gc]
     };
 
     let main_scene = Scene {
@@ -99,16 +102,16 @@ fn main() {
         game_objects: &mut[&mut viking_house_go]
     };
 
-
-    let program = load_shaders(&viking_house_gc, &display).unwrap();
+    //let vh_gc = viking_house_go.get_graphic_component().unwrap();
+    //let program = load_shaders(&vh_gc, &display).unwrap();
 
     // using unwrap is unecessarily destructive, isn't much of problem for now, if it does become
     // problematic will need to find elegant way to unwrap
-    let viking_house_geometry = viking_house_gc.geometry.unwrap();
+    /*let main_scene_geometry = vh_gc.geometry.unwrap();
 
-    let positions = viking_house_geometry.vertices;
-    let normals = viking_house_geometry.normals;
-    let indices = viking_house_geometry.indices;
+    let positions = main_scene_geometry.vertices;
+    let normals = main_scene_geometry.normals;
+    let indices = main_scene_geometry.indices;*/
 
     let mut main_camera = Camera {
         transform: Transform::new(
@@ -135,7 +138,7 @@ fn main() {
             _ => (),
         }
 
-        let mut target = display.draw();
+        /*let mut target = display.draw();
 
         // need to have the lights in the scene
         let light = [-1.0, 0.4, 0.9f32];
@@ -167,13 +170,13 @@ fn main() {
             ]
         };
 
-        let params = glium::DrawParameters {
-            depth: glium::Depth {
-                test: glium::draw_parameters::DepthTest::IfLess,
+        let params = glium::drawparameters {
+            depth: glium::depth {
+                test: glium::draw_parameters::depthtest::ifless,
                 write: true,
-                ..Default::default()
+                ..default::default()
             },
-            ..Default::default()
+            ..default::default()
         };
 
         // refreshes the background colour 
@@ -191,12 +194,12 @@ fn main() {
                 &params,
             )
             .unwrap();
-        target.finish().unwrap();
+        target.finish().unwrap();*/
 
         let next_frame_time = begin_frame_time + std::time::Duration::from_nanos(16_666_667);
 
         if std::time::Instant::now() > next_frame_time {
-            println!("needed more time for this frame");
+            println!("Warning: needed more time for this frame");
         }
 
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
