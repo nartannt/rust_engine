@@ -99,7 +99,7 @@ fn main() {
 
     let mut main_scene = Scene {
         is_active: true,
-        game_objects: &mut Vec::new()
+        game_objects: &mut [&mut viking_house_go]
     };
 
 
@@ -113,9 +113,6 @@ fn main() {
         fov: 0.1,
     };
 
-
-    //main_scene.load_scene(&display);
-    //update_camera(Destroyed, &mut main_camera);
 
     let game_loop = event_loop.run(move |ev, _, control_flow| {
 

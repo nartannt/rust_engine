@@ -51,15 +51,10 @@ impl <'a> GameObject<'a> {
 pub struct Scene<'a> {
     pub is_active: bool,
     // TODO need a more appropriate structure
-    pub game_objects: &'a mut Vec<&'a mut GameObject<'a>>
+    pub game_objects: &'a mut [&'a mut GameObject<'a>]
 }
 
 impl <'a> Scene<'a> {
-
-    pub fn add_game_object(&'a mut self, go: &'a mut GameObject<'a>) {
-        self.game_objects.push(go);
-    }
-
     // loads all active objects
     // so far is only useful for object with graphic components
     pub fn load_scene(&'a mut self, display: &Display) {
