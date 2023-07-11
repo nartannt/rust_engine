@@ -197,16 +197,18 @@ pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectMod
 // we have two options, we can chose to have the engine crash if anything unexpected happens or
 // wait until we have no choice, will go with the middle ground of waiting as long as possible
 // whilst loudly complaining
-pub fn load_shaders<F: Facade>(graph_comp: &GraphicComponent, facade: &F) -> Option<Program> {
+// check if shaders already loaded?
+pub fn load_shaders<'a, F: Facade>(graph_comp: &'a mut GraphicComponent, facade: &'a F) {
     let res = glium::Program::from_source(facade, graph_comp.vertex_shader, graph_comp.fragment_shader, None);
     match res {
         Err(prog_err) => {
             println!("WARNING: shaders have failed to compile");
             println!("{}", prog_err.to_string());
-            return None;
+            graph_comp.program = None;
         },
-        Ok(prog_res) =>
-            return Some(prog_res)
+        Ok(prog_res) => {
+            graph_comp.program = Some(prog_res);
+        }
     }
 }
 

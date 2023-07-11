@@ -22,6 +22,7 @@ use crate::scene::Scene;
 use crate::graphic_object::load_shaders;
 use crate::graphic_object::Component;
 use crate::Component::GraphicComponent as GC;
+use glutin::event::WindowEvent::Destroyed;
 
 mod camera;
 mod fps_camera_controller;
@@ -38,11 +39,7 @@ fn main() {
     let test_path = Path::new("src/test2.obj");
 
 
-    // how do we want to manage shaders? - hide them inside graphic objects
-    // do we store them as programs or do we turn them into programs? - we store them as strings
-    // and we turn them into programs later
-    // where do we store them, as a seperate file?
-
+    // eventually load them from seperate file
     let vertex_shader_src = r#"
         #version 150
 
@@ -94,24 +91,18 @@ fn main() {
             Vector3::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 1.0, 1.0)
         ),
-        components: &mut[&mut viking_house_gc]
+        //components: &mut[&mut viking_house_gc]
+        components: &mut []
     };
 
-    let main_scene = Scene {
+
+
+    let mut main_scene = Scene {
         is_active: true,
-        game_objects: &mut[&mut viking_house_go]
+        game_objects: &mut Vec::new()
     };
 
-    //let vh_gc = viking_house_go.get_graphic_component().unwrap();
-    //let program = load_shaders(&vh_gc, &display).unwrap();
 
-    // using unwrap is unecessarily destructive, isn't much of problem for now, if it does become
-    // problematic will need to find elegant way to unwrap
-    /*let main_scene_geometry = vh_gc.geometry.unwrap();
-
-    let positions = main_scene_geometry.vertices;
-    let normals = main_scene_geometry.normals;
-    let indices = main_scene_geometry.indices;*/
 
     let mut main_camera = Camera {
         transform: Transform::new(
@@ -122,7 +113,12 @@ fn main() {
         fov: 0.1,
     };
 
-    event_loop.run(move |ev, _, control_flow| {
+
+    //main_scene.load_scene(&display);
+    //update_camera(Destroyed, &mut main_camera);
+
+    let game_loop = event_loop.run(move |ev, _, control_flow| {
+
         let begin_frame_time = std::time::Instant::now();
 
         match ev {
@@ -138,63 +134,9 @@ fn main() {
             _ => (),
         }
 
-        /*let mut target = display.draw();
+        let mut target = display.draw();
 
-        // need to have the lights in the scene
-        let light = [-1.0, 0.4, 0.9f32];
-
-        // depends on the transform of each object
-        let matrix = [
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0, 1.0f32],
-        ];
-        let view = main_camera.view_matrix();
-
-        let perspective = {
-            let (width, height) = target.get_dimensions();
-            let aspect_ratio = height as f32 / width as f32;
-
-            let fov: f32 = 3.1 / 3.0;
-            let zfar = 1024.0;
-            let znear = 0.1;
-
-            let f = 1.0 / (fov / 2.0).tan();
-
-            [
-                [f * aspect_ratio, 0.0, 0.0, 0.0],
-                [0.0, f, 0.0, 0.0],
-                [0.0, 0.0, (zfar + znear) / (zfar - znear), 1.0],
-                [0.0, 0.0, -(2.0 * zfar * znear) / (zfar - znear), 0.0],
-            ]
-        };
-
-        let params = glium::drawparameters {
-            depth: glium::depth {
-                test: glium::draw_parameters::depthtest::ifless,
-                write: true,
-                ..default::default()
-            },
-            ..default::default()
-        };
-
-        // refreshes the background colour 
-        target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
-
-        // we need a different draw call for each object
-        // we can use the same draw call for objects with the same shaders
-        // how do we figure that out? - optimisation to be left for later
-        target
-            .draw(
-                (&positions, &normals),
-                &indices,
-                &program,
-                &uniform! {matrix: matrix, view: view, u_light: light, perspective: perspective},
-                &params,
-            )
-            .unwrap();
-        target.finish().unwrap();*/
+        main_scene.draw_scene(target, &main_camera);
 
         let next_frame_time = begin_frame_time + std::time::Duration::from_nanos(16_666_667);
 
@@ -204,4 +146,6 @@ fn main() {
 
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
     });
+
+    // nohthing to see here
 }

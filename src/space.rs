@@ -10,6 +10,9 @@ use libm::cosf;
 use libm::sinf;
 use num::Float;
 
+
+// TODO genrealise functions beyond f32 (not urgent, not important, would be nice tho)
+
 // norm of a vector2
 pub fn v3_norm<S: Float>(vec: Vector3<S>) -> S {
     return (vec.x.powi(2) + vec.y.powi(2) + vec.z.powi(2)).sqrt();
