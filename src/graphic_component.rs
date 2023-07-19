@@ -40,7 +40,13 @@ pub trait ComponentTrait<'a> {
     fn set_active(&mut self, activation: bool) -> ();
 
     // it would be great to find a more graceful way to handle this (i don't have any ideas)
-    fn component_type(&self) -> &'a str;
+    fn component_type(&self) -> ComponentType;
+
+}
+
+#[derive(PartialEq)]
+pub enum ComponentType {
+    GraphicComponent
 }
 
 
@@ -60,11 +66,30 @@ pub struct GraphicComponent <'a>{
     pub is_active: bool,
     pub geometry: Option<ObjectModel>,
     pub program: Option<Program>,
-    pub vertex_shader: &'a str,
-    pub fragment_shader: &'a str
+    pub vertex_shader: Option<&'a str>,
+    pub fragment_shader: Option<&'a str>
 }
 
 impl <'a> GraphicComponent<'a> {
+    pub fn new() -> Self {
+        GraphicComponent {
+            is_active: true,
+            geometry: None,
+            program: None,
+            vertex_shader: None,
+            fragment_shader: None 
+        }
+    }
+
+    pub fn add_shaders(&mut self, vertex_shader: &'a str, fragment_shader: &'a str) {
+        self.vertex_shader = Some(vertex_shader);
+        self.fragment_shader = Some(fragment_shader);
+    }
+
+    pub fn add_geometry(&mut self, model: ObjectModel) {
+        self.geometry = Some(model);
+    }
+
     // the lifetime is way too long, we only need the matrix for a single frame
     // could be solved by passing a mut as parameter and modifying that but it seems disgusting
    pub fn get_uniform_matrix (transform: Transform) -> &'a[&'a[f32; 4]; 4] {
@@ -89,16 +114,15 @@ impl <'a> ComponentTrait<'a> for GraphicComponent<'a> {
         self.is_active = activation;
     }
 
-    fn component_type (&self) -> &'a str {
-        return &"graphic";
+    // TODO replace string by enum
+    fn component_type (&self) -> ComponentType {
+        return ComponentType::GraphicComponent;
     }
 
 }
 
-// should be in its own file TODO
-// TODO i will need to derive ComponentTrait for Component by using the implementations of its members
-// will require a new crate that generates a derive macro
-// in the meantime whilst i only have a couple of different components, i'll do it by hand
+// TODO should be in its own file
+// do i actually need this?
 pub enum Component<'a> {
     GraphicComponent(GraphicComponent<'a>)
 }
@@ -115,11 +139,12 @@ impl <'a> ComponentTrait<'a> for Component<'a> {
         }
 
     }
-    fn component_type(&self) -> &'a str {
+    fn component_type(&self) -> ComponentType {
         match self {
             Component::GraphicComponent(gc) => GraphicComponent::<'_>::component_type(&gc)
         }
     }
+
 }
 
 pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectModel> {
@@ -198,8 +223,10 @@ pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectMod
 // wait until we have no choice, will go with the middle ground of waiting as long as possible
 // whilst loudly complaining
 // check if shaders already loaded?
+// TODO return an error, print warning and continue the best we can if function fails
 pub fn load_shaders<'a, F: Facade>(graph_comp: &'a mut GraphicComponent, facade: &'a F) {
-    let res = glium::Program::from_source(facade, graph_comp.vertex_shader, graph_comp.fragment_shader, None);
+    let res = glium::Program::from_source(
+            facade, graph_comp.vertex_shader.unwrap(), graph_comp.fragment_shader.unwrap(), None);
     match res {
         Err(prog_err) => {
             println!("WARNING: shaders have failed to compile");
