@@ -122,9 +122,9 @@ impl <'a> ComponentTrait<'a> for GraphicComponent<'a> {
 }
 
 // TODO should be in its own file
-// do i actually need this?
+// do i actually need this? yes, yes you do
 pub enum Component<'a> {
-    GraphicComponent(GraphicComponent<'a>)
+    GraphicComponent(Box<GraphicComponent<'a>>)
 }
 
 impl <'a> ComponentTrait<'a> for Component<'a> {
@@ -224,7 +224,7 @@ pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectMod
 // whilst loudly complaining
 // check if shaders already loaded?
 // TODO return an error, print warning and continue the best we can if function fails
-pub fn load_shaders<'a, F: Facade>(graph_comp: &'a mut GraphicComponent, facade: &'a F) {
+pub fn load_shaders<'a, F: Facade>(mut graph_comp: Box<GraphicComponent>, facade: &'a F) {
     let res = glium::Program::from_source(
             facade, graph_comp.vertex_shader.unwrap(), graph_comp.fragment_shader.unwrap(), None);
     match res {

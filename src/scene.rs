@@ -3,6 +3,7 @@
 
 
 use crate::graphic_component::GraphicComponent;
+use std::cell::RefCell;
 use glium::Frame;
 use crate::space::Transform;
 use crate::graphic_component::Component;
@@ -13,43 +14,57 @@ use glium::Display;
 use crate::glium::Surface;
 use crate::Camera;
 use crate::load_shaders;
+use legion::entity::Entity;
 
-//#[derive(Default)] TODO implement Default
-pub struct GameObject<'a> {
+// are only wrappers for legion entities
+pub struct GameObject {
     pub is_active: bool,
-    pub transform: Transform,
-    pub components: Vec<Box<dyn ComponentTrait<'a>>>
+    // clearly not a good interface but we are currently restructuring the whole project
+    // we'll tolerate some clunkyness for now
+    pub entity: Option<Entity>,
+    //pub transform: Transform,
+    //pub components: Vec<Box<Component<'a>>>
 }
 
-impl <'a> GameObject<'a> {
+impl GameObject {
     
     pub fn new() -> Self {
         GameObject{
             is_active: true,
-            transform: Transform::default(),
-            components: Vec::new()
+            //transform: Transform::default(),
+            //components: Vec::new()
+            entity: None,
         }
     }
 
-    pub fn add_component(&mut self, component: Box<dyn ComponentTrait<'a>>) {
+    /*pub fn add_component(&mut self, component: Box<Component<'a>>) {
         self.components.push(component);
     }
 
-    // will return the first graphic component of the object
+    // will return a graphic component of the object
     // TODO handle multiple graphic components
-    pub fn get_graphic_component (&self) -> Option<&mut GraphicComponent> {
+    // returns ownership of the graphic component
+    pub fn get_graphic_component (&mut self) -> Option<Box<GraphicComponent<'a>>> {
         //let graphic_components = self.components.iter().filter(|c| (***c).component_type() == "graphic");
+        let mut gc_list = self.components.iter().filter_map(|c| match *c { &Component::GraphicComponent(gc) => Some(gc), _ => None});
         // TODO finish this
+        return gc_list.next();
+        //return None;
+    }
+
+    // need to find better name
+    // returns a reference to the graphic component
+    // TODO handle multiple graphic components
+    pub fn read_graphic_component(&self) -> Option<&Box<GraphicComponent<'a>>> {
         return None;
     }
 
     // will return true iff the go has a graphic component
     pub fn has_graphic_component(&self) -> bool {
-        match self.get_graphic_component() {
-            None => return false,
-            Some(_) => return true
-        }
-    }
+        // TODO
+        return false;
+
+    }*/
 
     pub fn is_active(&self) -> bool {
         return self.is_active;
@@ -57,13 +72,13 @@ impl <'a> GameObject<'a> {
 
 }
 
-pub struct Scene<'a> {
+pub struct Scene{
     pub is_active: bool,
     // TODO need a more appropriate structure
-    pub game_objects: Vec<Box<GameObject<'a>>>
+    pub game_objects: Vec<Box<GameObject>>
 }
 
-impl <'a> Scene<'a> {
+impl <'a> Scene {
 
     pub fn new() -> Self {
         Scene {
@@ -72,7 +87,7 @@ impl <'a> Scene<'a> {
         }
     }
 
-    pub fn add_object(&mut self, go: Box<GameObject<'a>>) {
+    pub fn add_object(&mut self, go: Box<GameObject>) {
         self.game_objects.push(go);
     }
         
@@ -80,11 +95,11 @@ impl <'a> Scene<'a> {
     // loads all active objects
     // so far is only useful for object with graphic components
     pub fn load_scene(&'a mut self, display: &Display) {
-        let go_to_load= self.game_objects.iter().filter(|go| go.is_active() && go.has_graphic_component());
+        /*let go_to_load= self.game_objects.iter().filter(|go| go.is_active() && go.has_graphic_component());
         go_to_load.for_each( |go| {
             let gc = go.get_graphic_component().unwrap();
             load_shaders(gc, display);
-        });
+        });*/
     }
 
 
@@ -140,7 +155,8 @@ impl <'a> Scene<'a> {
         // we need the game object in order to draw the object because that is where its
         // transform is stored
         let mut draw_object = |go: &Box<GameObject>| {
-            let gc = go.get_graphic_component().unwrap();
+            print!("drawing object in theory");
+            /*let gc = go.read_graphic_component().unwrap();
             if gc.is_active() {
 
                 let program = gc.program.as_ref().unwrap();
@@ -171,13 +187,13 @@ impl <'a> Scene<'a> {
                         &params,
                     )
                     .unwrap();
-            }
+            }*/
             
         };
         
-        let go_to_draw = self.game_objects.iter().filter(|go| go.is_active() && go.has_graphic_component());
+        //let go_to_draw = self.game_objects.iter().filter(|go| go.is_active() && go.has_graphic_component());
 
-        go_to_draw.for_each(|go| draw_object(go));
+        //go_to_draw.for_each(|go| draw_object(go));
 
         target.finish().unwrap();
 

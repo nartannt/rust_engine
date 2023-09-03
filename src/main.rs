@@ -7,10 +7,13 @@ extern crate glium;
 extern crate image;
 extern crate libm;
 
+//use legion::*;  doesn't seem to work
+use legion::world::World;
 use crate::camera::Camera;
 use crate::fps_camera_controller::update_camera;
-use crate::scene::GameObject;
 use crate::graphic_component::load_model;
+use crate::scene::GameObject;
+use crate::game::Game;
 use crate::graphic_component::GraphicComponent;
 use crate::space::rotation_to_direction;
 use crate::space::Transform;
@@ -36,6 +39,11 @@ fn main() {
     let wb = glutin::window::WindowBuilder::new();
     let cb = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display = glium::Display::new(wb, cb, &event_loop).unwrap();
+
+    let world = World::default();
+    let game = Game{display: display, world: world};
+
+    game.run(event_loop);
 
 
         // nohthing to see here

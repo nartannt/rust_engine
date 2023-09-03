@@ -1,4 +1,5 @@
 use crate::Scene;
+use crate::Component;
 use crate::GraphicComponent;
 use crate::GameObject;
 use std::path::Path;
@@ -9,23 +10,17 @@ use crate::Transform;
 use crate::Camera;
 use crate::update_camera;
 use glutin::event_loop::EventLoop;
+use legion::world::World;
 
 
-pub enum State {
-    Loading,
-    Running,
-    Stopping
-}
 
-pub struct Game<'a> {
-    pub state: State,
+pub struct Game {
     pub display: glium::Display,
-    // might want a list of scenes
-    pub main_scene: Scene<'a>
+    pub world: World
 
 }
 
-impl <'a> Game<'a> {
+impl Game {
     pub fn run(self, event_loop: EventLoop<()>) {
 
         let viking_house_model_path = Path::new("src/test2.obj");
@@ -80,9 +75,9 @@ impl <'a> Game<'a> {
         let mut viking_house_go = Box::new(GameObject::new());
 
         viking_house_gc.add_shaders(&vertex_shader_src, &fragment_shader_src);
-        //viking_house_gc.add_geometry(load_model(viking_house_model_path, &self.display).unwrap());
+        viking_house_gc.add_geometry(load_model(viking_house_model_path, &self.display).unwrap());
 
-        viking_house_go.add_component(viking_house_gc);
+        //viking_house_go.add_component(Box::new(Component::GraphicComponent(viking_house_gc)));
 
         viking_scene.add_object(viking_house_go);
 
@@ -95,7 +90,6 @@ impl <'a> Game<'a> {
                 is_init = false;
             }
 
-            let mut main_scene = &mut viking_scene;
 
             match ev {
                 glutin::event::Event::WindowEvent { event, .. } => match event {
@@ -112,7 +106,7 @@ impl <'a> Game<'a> {
 
             let target = self.display.draw();
 
-            main_scene.draw_scene(target, &main_camera);
+            viking_scene.draw_scene(target, &main_camera);
 
             let next_frame_time = begin_frame_time + std::time::Duration::from_nanos(16_666_667);
 
