@@ -23,8 +23,8 @@ use glutin::event::VirtualKeyCode;
 use std::path::Path;
 use crate::scene::Scene;
 use crate::graphic_component::load_shaders;
-use crate::graphic_component::Component;
-use crate::Component::GraphicComponent as GC;
+//use crate::graphic_component::Component;
+//use crate::Component::GraphicComponent as GC;
 use glutin::event::WindowEvent::Destroyed;
 
 mod camera;

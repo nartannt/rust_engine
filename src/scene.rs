@@ -6,62 +6,65 @@ use crate::graphic_component::GraphicComponent;
 use std::cell::RefCell;
 use glium::Frame;
 use crate::space::Transform;
-use crate::graphic_component::Component;
-use crate::graphic_component::ComponentTrait;
+//use crate::graphic_component::Component;
+//use crate::graphic_component::ComponentTrait;
 use crate::graphic_component::ObjectModel;
 use crate::graphic_component::ComponentType;
 use glium::Display;
 use crate::glium::Surface;
 use crate::Camera;
 use crate::load_shaders;
-use legion::entity::Entity;
+use legion::world::Entity;
+use legion::world::World;
+use legion::world::Entry;
 
 // are only wrappers for legion entities
 pub struct GameObject {
     pub is_active: bool,
     // clearly not a good interface but we are currently restructuring the whole project
     // we'll tolerate some clunkyness for now
-    pub entity: Option<Entity>,
+    // this should probably be private
+    pub entity: Entity,
     //pub transform: Transform,
     //pub components: Vec<Box<Component<'a>>>
 }
 
-impl GameObject {
+impl GameObject{
     
-    pub fn new() -> Self {
+    pub fn new(mut world: World) -> Self {
         GameObject{
             is_active: true,
             //transform: Transform::default(),
             //components: Vec::new()
-            entity: None,
+            entity: world.push(()),
         }
     }
 
-    /*pub fn add_component(&mut self, component: Box<Component<'a>>) {
+    /*pub fn add_component(&mut self, component: box<component<'a>>) {
         self.components.push(component);
     }
 
     // will return a graphic component of the object
-    // TODO handle multiple graphic components
+    // todo handle multiple graphic components
     // returns ownership of the graphic component
-    pub fn get_graphic_component (&mut self) -> Option<Box<GraphicComponent<'a>>> {
+    pub fn get_graphic_component (&mut self) -> option<box<graphiccomponent<'a>>> {
         //let graphic_components = self.components.iter().filter(|c| (***c).component_type() == "graphic");
-        let mut gc_list = self.components.iter().filter_map(|c| match *c { &Component::GraphicComponent(gc) => Some(gc), _ => None});
-        // TODO finish this
+        let mut gc_list = self.components.iter().filter_map(|c| match *c { &component::graphiccomponent(gc) => some(gc), _ => none});
+        // todo finish this
         return gc_list.next();
-        //return None;
+        //return none;
     }
 
     // need to find better name
     // returns a reference to the graphic component
-    // TODO handle multiple graphic components
-    pub fn read_graphic_component(&self) -> Option<&Box<GraphicComponent<'a>>> {
-        return None;
+    // todo handle multiple graphic components
+    pub fn read_graphic_component(&self) -> option<&box<graphiccomponent<'a>>> {
+        return none;
     }
 
     // will return true iff the go has a graphic component
     pub fn has_graphic_component(&self) -> bool {
-        // TODO
+        // todo
         return false;
 
     }*/
@@ -78,7 +81,7 @@ pub struct Scene{
     pub game_objects: Vec<Box<GameObject>>
 }
 
-impl <'a> Scene {
+impl<'a> Scene{
 
     pub fn new() -> Self {
         Scene {

@@ -1,5 +1,5 @@
 use crate::Scene;
-use crate::Component;
+//use crate::Component;
 use crate::GraphicComponent;
 use crate::GameObject;
 use std::path::Path;
@@ -69,10 +69,12 @@ impl Game {
             fov: 0.1,
         };
 
+        let world = self.world;
      
         let mut viking_scene = Scene::new();
         let mut viking_house_gc = Box::new(GraphicComponent::new());
-        let mut viking_house_go = Box::new(GameObject::new());
+        let mut viking_house_go = Box::new(GameObject::new(world));
+        world.entry(viking_house_go.entity).unwrap().add_component(viking_house_gc);
 
         viking_house_gc.add_shaders(&vertex_shader_src, &fragment_shader_src);
         viking_house_gc.add_geometry(load_model(viking_house_model_path, &self.display).unwrap());
