@@ -1,11 +1,11 @@
 use crate::Scene;
-//use crate::Component;
+use std::collections::HashMap;
 use crate::GraphicComponent;
 use crate::GameObject;
 use std::path::Path;
 use cgmath;
 use crate::Vector3;
-use crate::load_model;
+//use crate::load_model;
 use crate::Transform;
 use crate::Camera;
 use crate::update_camera;
@@ -71,13 +71,15 @@ impl Game {
 
         let world = self.world;
      
-        let mut viking_scene = Scene::new();
-        let mut viking_house_gc = Box::new(GraphicComponent::new());
+        // warning !!!! TODO both game and scene have displays, only scene should, game should have
+        // the window
+        let mut viking_scene = Scene::new(self.display.clone());
+        let mut viking_house_gc = Box::new(GraphicComponent::new(Path::new("")));
         let mut viking_house_go = Box::new(GameObject::new(world));
-        world.entry(viking_house_go.entity).unwrap().add_component(viking_house_gc);
+        //world.entry(viking_house_go.entity).unwrap().add_component(viking_house_gc);
 
-        viking_house_gc.add_shaders(&vertex_shader_src, &fragment_shader_src);
-        viking_house_gc.add_geometry(load_model(viking_house_model_path, &self.display).unwrap());
+        //viking_house_gc.add_shaders(&vertex_shader_src, &fragment_shader_src);
+        //viking_house_gc.add_geometry(load_model(viking_house_model_path, &self.display).unwrap());
 
         //viking_house_go.add_component(Box::new(Component::GraphicComponent(viking_house_gc)));
 

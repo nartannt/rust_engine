@@ -3,9 +3,13 @@
 
 
 use crate::graphic_component::GraphicComponent;
+use crate::graphic_component::load_model;
+use legion::world::WorldOptions;
+use legion::storage::Component;
 use std::cell::RefCell;
 use glium::Frame;
 use crate::space::Transform;
+use std::collections::HashMap;
 //use crate::graphic_component::Component;
 //use crate::graphic_component::ComponentTrait;
 use crate::graphic_component::ObjectModel;
@@ -13,7 +17,7 @@ use crate::graphic_component::ComponentType;
 use glium::Display;
 use crate::glium::Surface;
 use crate::Camera;
-use crate::load_shaders;
+//use crate::load_shaders;
 use legion::world::Entity;
 use legion::world::World;
 use legion::world::Entry;
@@ -77,21 +81,49 @@ impl GameObject{
 
 pub struct Scene{
     pub is_active: bool,
-    // TODO need a more appropriate structure
-    pub game_objects: Vec<Box<GameObject>>
+    // is now obsolete, need to iterate over worlds
+    pub game_objects: Vec<Box<GameObject>>,
+
+    // since we will only deal with go in relation to their scene
+    // it makes sense to have a world per scene
+    pub world: World,
+
+    // when we add a GameObject to a scene,
+    // if it has a GraphicComponent, if its model already exists, we don't do anything
+    // else, we fetch it in the files and add it to the scene models
+    pub models: HashMap<String, Option<ObjectModel>>,
+
+    // not sure if this is the right way to do things
+    pub display_clone: Display,
+
 }
 
 impl<'a> Scene{
 
-    pub fn new() -> Self {
+    pub fn new(display_clone: Display) -> Self {
         Scene {
             is_active: true,
-            game_objects: Vec::new()
+            game_objects: Vec::new(),
+            models: HashMap::new(),
+            world: World::new(WorldOptions::default()),
+            display_clone: display_clone,
         }
     }
 
     pub fn add_object(&mut self, go: Box<GameObject>) {
-        self.game_objects.push(go);
+        // TODO make a method for that or a macro at least, checks if there is a component of a
+        // certain type attached to an entity
+        //if (*self.world.entry(go.entity).unwrap().archetype()).layout().has_component::<GraphicComponent>() {
+        let go_entry = self.world.entry(go.entity).unwrap();
+        let gc_res = go_entry.get_component::<GraphicComponent>();
+        match gc_res {
+            Ok(gc) => {
+                if ! self.models.contains_key(gc.geometry.to_str().unwrap()) {
+                    load_model(gc.geometry, &self.display_clone);
+                }
+            }
+            Err(_) => (),
+        }
     }
         
 

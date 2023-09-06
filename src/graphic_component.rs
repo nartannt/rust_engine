@@ -56,26 +56,21 @@ pub struct ObjectModel {
     pub indices: glium::IndexBuffer<u16>,
 }
 
-// we probably want to create a component trait
-// i want to approach things in a clean and generic manner
-// however, in order to keep things grounded, i won't implement a generic trait or method unless it
-// is used more than once
-// will also want components to be able to point to their parents
-#[derive(Default)]
+//#[derive(Default)]
 pub struct GraphicComponent <'a>{
     pub is_active: bool,
-    pub geometry: Option<ObjectModel>,
-    pub program: Option<Program>,
+    // path to the model (should probably have a specific type for that)
+    // will become an option if necessary
+    pub geometry: &'a Path,
     pub vertex_shader: Option<&'a str>,
     pub fragment_shader: Option<&'a str>
 }
 
 impl <'a> GraphicComponent<'a> {
-    pub fn new() -> Self {
+    pub fn new(model_path: &'a Path) -> Self {
         GraphicComponent {
             is_active: true,
-            geometry: None,
-            program: None,
+            geometry: model_path,
             vertex_shader: None,
             fragment_shader: None 
         }
@@ -86,9 +81,9 @@ impl <'a> GraphicComponent<'a> {
         self.fragment_shader = Some(fragment_shader);
     }
 
-    pub fn add_geometry(&mut self, model: ObjectModel) {
+    /*pub fn add_geometry(&mut self, model: ObjectModel) {
         self.geometry = Some(model);
-    }
+    }*/
 
     // the lifetime is way too long, we only need the matrix for a single frame
     // could be solved by passing a mut as parameter and modifying that but it seems disgusting
@@ -154,7 +149,6 @@ pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectMod
             println!("Warning, failed to open file: {}", err);
             return None;
         }
-
         Ok(file) => {
             let input = BufReader::new(file);
             let model_result: Result<Obj, ObjError> = load_obj(input);
@@ -219,12 +213,13 @@ pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectMod
     }
 }
 
+
 // we have two options, we can chose to have the engine crash if anything unexpected happens or
 // wait until we have no choice, will go with the middle ground of waiting as long as possible
 // whilst loudly complaining
 // check if shaders already loaded?
 // TODO return an error, print warning and continue the best we can if function fails
-pub fn load_shaders<'a, F: Facade>(mut graph_comp: Box<GraphicComponent>, facade: &'a F) {
+/*pub fn load_shaders<'a, F: Facade>(mut graph_comp: Box<GraphicComponent>, facade: &'a F) {
     let res = glium::Program::from_source(
             facade, graph_comp.vertex_shader.unwrap(), graph_comp.fragment_shader.unwrap(), None);
     match res {
@@ -237,5 +232,5 @@ pub fn load_shaders<'a, F: Facade>(mut graph_comp: Box<GraphicComponent>, facade
             graph_comp.program = Some(prog_res);
         }
     }
-}
+}*/
 
