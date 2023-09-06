@@ -57,28 +57,28 @@ pub struct ObjectModel {
 }
 
 //#[derive(Default)]
-pub struct GraphicComponent <'a>{
+pub struct GraphicComponent {
     pub is_active: bool,
     // path to the model (should probably have a specific type for that)
     // will become an option if necessary
-    pub geometry: &'a Path,
-    pub vertex_shader: Option<&'a str>,
-    pub fragment_shader: Option<&'a str>
+    pub geometry: String,
+    pub vertex_shader: String,
+    pub fragment_shader: String,
 }
 
-impl <'a> GraphicComponent<'a> {
-    pub fn new(model_path: &'a Path) -> Self {
+impl <'a> GraphicComponent {
+    pub fn new(model_path: String, vertex_shader_path: String, fragment_shader_path: String) -> Self {
         GraphicComponent {
             is_active: true,
             geometry: model_path,
-            vertex_shader: None,
-            fragment_shader: None 
+            vertex_shader: vertex_shader_path,
+            fragment_shader: fragment_shader_path,
         }
     }
 
-    pub fn add_shaders(&mut self, vertex_shader: &'a str, fragment_shader: &'a str) {
-        self.vertex_shader = Some(vertex_shader);
-        self.fragment_shader = Some(fragment_shader);
+    pub fn add_shaders(&mut self, vertex_shader: String, fragment_shader: String) {
+        self.vertex_shader = vertex_shader;
+        self.fragment_shader = fragment_shader;
     }
 
     /*pub fn add_geometry(&mut self, model: ObjectModel) {
@@ -95,11 +95,11 @@ impl <'a> GraphicComponent<'a> {
             &[0.0, 0.0, 0.0, 1.0f32],
        ];
     }
-    
+
 
 }
 
-/*impl <'a> ComponentTrait<'a> for GraphicComponent<'a> {
+impl <'a> ComponentTrait<'a> for GraphicComponent {
     
     fn is_active(&self) -> bool {
        return self.is_active;
@@ -115,7 +115,7 @@ impl <'a> GraphicComponent<'a> {
     }
 
 }
-
+/*
 // TODO should be in its own file
 // do i actually need this? yes, yes you do, maybe not anymore ...
 pub enum Component<'a> {

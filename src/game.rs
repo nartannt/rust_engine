@@ -69,14 +69,12 @@ impl Game {
             fov: 0.1,
         };
 
-        let world = self.world;
+        let mut world = self.world;
      
-        // warning !!!! TODO both game and scene have displays, only scene should, game should have
-        // the window
         let mut viking_scene = Scene::new(self.display.clone());
-        let mut viking_house_gc = Box::new(GraphicComponent::new(Path::new("")));
+        let mut viking_house_gc = Box::new(GraphicComponent::new("".to_string(), "".to_string(), "".to_string()));
         let mut viking_house_go = Box::new(GameObject::new(world));
-        //world.entry(viking_house_go.entity).unwrap().add_component(viking_house_gc);
+        world.entry(viking_house_go.entity).unwrap().add_component(viking_house_gc);
 
         //viking_house_gc.add_shaders(&vertex_shader_src, &fragment_shader_src);
         //viking_house_gc.add_geometry(load_model(viking_house_model_path, &self.display).unwrap());

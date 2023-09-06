@@ -3,6 +3,8 @@
 
 
 use crate::graphic_component::GraphicComponent;
+use std::path::Path;
+use glium::Program;
 use crate::graphic_component::load_model;
 use legion::world::WorldOptions;
 use legion::storage::Component;
@@ -11,7 +13,7 @@ use glium::Frame;
 use crate::space::Transform;
 use std::collections::HashMap;
 //use crate::graphic_component::Component;
-//use crate::graphic_component::ComponentTrait;
+use crate::graphic_component::ComponentTrait;
 use crate::graphic_component::ObjectModel;
 use crate::graphic_component::ComponentType;
 use glium::Display;
@@ -91,7 +93,11 @@ pub struct Scene{
     // when we add a GameObject to a scene,
     // if it has a GraphicComponent, if its model already exists, we don't do anything
     // else, we fetch it in the files and add it to the scene models
-    pub models: HashMap<String, Option<ObjectModel>>,
+    pub models: HashMap<String, ObjectModel>,
+
+    // same thing as models except for shaders
+    // the first String is for the vertex shaders and the second one for fragment shaders
+    pub programs: HashMap<String, HashMap<String, Program>>,
 
     // not sure if this is the right way to do things
     pub display_clone: Display,
@@ -105,21 +111,20 @@ impl<'a> Scene{
             is_active: true,
             game_objects: Vec::new(),
             models: HashMap::new(),
+            programs: HashMap::new(),
             world: World::new(WorldOptions::default()),
             display_clone: display_clone,
         }
     }
 
     pub fn add_object(&mut self, go: Box<GameObject>) {
-        // TODO make a method for that or a macro at least, checks if there is a component of a
-        // certain type attached to an entity
-        //if (*self.world.entry(go.entity).unwrap().archetype()).layout().has_component::<GraphicComponent>() {
         let go_entry = self.world.entry(go.entity).unwrap();
         let gc_res = go_entry.get_component::<GraphicComponent>();
         match gc_res {
             Ok(gc) => {
-                if ! self.models.contains_key(gc.geometry.to_str().unwrap()) {
-                    load_model(gc.geometry, &self.display_clone);
+                // TODO same things as models except for shaders
+                if ! self.models.contains_key(&gc.geometry) {
+                    load_model(Path::new(&gc.geometry), &self.display_clone);
                 }
             }
             Err(_) => (),
@@ -127,6 +132,10 @@ impl<'a> Scene{
     }
         
 
+// TODO make a method for that or a macro at least, checks if there is a component of a
+// certain type attached to an entity
+//if (*self.world.entry(go.entity).unwrap().archetype()).layout().has_component::<GraphicComponent>() {
+        
     // loads all active objects
     // so far is only useful for object with graphic components
     pub fn load_scene(&'a mut self, display: &Display) {
@@ -142,8 +151,7 @@ impl<'a> Scene{
     // the scene draws all its objects for now, might be subject to change later
     // will draw all active objects with active graphic components
     // note for now, we assume that all objects have at most one graphic component
-    pub fn draw_scene (&self, mut target: Frame, camera: &Camera) {
-
+    pub fn draw_scene (&mut self, mut target: Frame, camera: &Camera) {
 
         // refreshes the background colour 
         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);
@@ -186,17 +194,17 @@ impl<'a> Scene{
             ]
         };
 
-
         // we need the game object in order to draw the object because that is where its
         // transform is stored
         let mut draw_object = |go: &Box<GameObject>| {
             print!("drawing object in theory");
-            /*let gc = go.read_graphic_component().unwrap();
+            let go_entry = self.world.entry(go.entity).unwrap();
+            let gc = go_entry.get_component::<GraphicComponent>().unwrap();
             if gc.is_active() {
 
-                let program = gc.program.as_ref().unwrap();
+                let program = self.programs.get(&gc.vertex_shader).unwrap().get(&gc.fragment_shader).unwrap();
+                let object_geometry = self.models.get(&gc.geometry).unwrap();
 
-                let object_geometry = gc.geometry.as_ref().unwrap();
 
                 let positions = &object_geometry.vertices;
                 let normals = &object_geometry.normals;
@@ -222,7 +230,7 @@ impl<'a> Scene{
                         &params,
                     )
                     .unwrap();
-            }*/
+            }
             
         };
         
