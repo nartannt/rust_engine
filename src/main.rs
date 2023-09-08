@@ -41,7 +41,7 @@ fn main() {
     let display = glium::Display::new(wb, cb, &event_loop).unwrap();
 
     let world = World::default();
-    let game = Game{display: display, world: world};
+    let game = Game{display: display};
 
     game.run(event_loop);
 

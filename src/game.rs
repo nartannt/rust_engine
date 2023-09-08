@@ -1,4 +1,5 @@
 use crate::Scene;
+use legion::EntityStore;
 use std::collections::HashMap;
 use crate::GraphicComponent;
 use crate::GameObject;
@@ -16,14 +17,12 @@ use legion::world::World;
 
 pub struct Game {
     pub display: glium::Display,
-    pub world: World
-
 }
 
 impl Game {
-    pub fn run(self, event_loop: EventLoop<()>) {
+    pub fn run(mut self, event_loop: EventLoop<()>) {
 
-        let viking_house_model_path = Path::new("src/test2.obj");
+        let viking_house_model_path = Path::new("src/test2.obj").to_str().unwrap().to_string();
 
         // eventually load them from seperate file
         let vertex_shader_src = r#"
@@ -44,7 +43,7 @@ impl Game {
                 v_normal = transpose(inverse(mat3(modelview))) * normal;
                 gl_Position = perspective * modelview * vec4(position, 1.0);
             }
-        "#;
+        "#.to_string();
         let fragment_shader_src = r#"
             #version 140
             
@@ -58,7 +57,7 @@ impl Game {
                 vec3 regular_color = vec3(1.0, 0.0, 0.0);
                 color = vec4(mix(dark_color, regular_color, brightness), 1.0);
             }
-        "#;
+        "#.to_string();
 
         let mut main_camera = Camera {
             transform: Transform::new(
@@ -69,17 +68,15 @@ impl Game {
             fov: 0.1,
         };
 
-        let mut world = self.world;
-     
         let mut viking_scene = Scene::new(self.display.clone());
-        let mut viking_house_gc = Box::new(GraphicComponent::new("".to_string(), "".to_string(), "".to_string()));
-        let mut viking_house_go = Box::new(GameObject::new(world));
-        world.entry(viking_house_go.entity).unwrap().add_component(viking_house_gc);
 
-        //viking_house_gc.add_shaders(&vertex_shader_src, &fragment_shader_src);
-        //viking_house_gc.add_geometry(load_model(viking_house_model_path, &self.display).unwrap());
+        let mut viking_house_gc = GraphicComponent::new(None, None, None);
+        viking_house_gc.add_shaders(vertex_shader_src, fragment_shader_src);
+        viking_house_gc.add_model(viking_house_model_path);
+        
+        let mut viking_house_go = GameObject::new(&mut viking_scene.world);
 
-        //viking_house_go.add_component(Box::new(Component::GraphicComponent(viking_house_gc)));
+        viking_scene.world.entry(viking_house_go.entity).unwrap().add_component(viking_house_gc);
 
         viking_scene.add_object(viking_house_go);
 

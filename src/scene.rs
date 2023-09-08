@@ -3,6 +3,9 @@
 
 
 use crate::graphic_component::GraphicComponent;
+use crate::graphic_component::load_shaders;
+use legion::IntoQuery;
+use legion::EntityStore;
 use std::path::Path;
 use glium::Program;
 use crate::graphic_component::load_model;
@@ -37,12 +40,13 @@ pub struct GameObject {
 
 impl GameObject{
     
-    pub fn new(mut world: World) -> Self {
+    pub fn new(world: &mut World) -> Self {
+        let entity = world.push(());
+        let test = world.entry(entity).unwrap();
         GameObject{
             is_active: true,
             //transform: Transform::default(),
-            //components: Vec::new()
-            entity: world.push(()),
+            entity: entity,
         }
     }
 
@@ -66,13 +70,6 @@ impl GameObject{
     // todo handle multiple graphic components
     pub fn read_graphic_component(&self) -> option<&box<graphiccomponent<'a>>> {
         return none;
-    }
-
-    // will return true iff the go has a graphic component
-    pub fn has_graphic_component(&self) -> bool {
-        // todo
-        return false;
-
     }*/
 
     pub fn is_active(&self) -> bool {
@@ -81,10 +78,14 @@ impl GameObject{
 
 }
 
+// TODO generalise this
+pub fn has_graphic_component(go: &GameObject, world: &World) -> bool {
+    let entry = world.entry_ref(go.entity).unwrap();
+    return entry.archetype().layout().has_component::<GraphicComponent>();
+}
+
 pub struct Scene{
     pub is_active: bool,
-    // is now obsolete, need to iterate over worlds
-    pub game_objects: Vec<Box<GameObject>>,
 
     // since we will only deal with go in relation to their scene
     // it makes sense to have a world per scene
@@ -97,7 +98,7 @@ pub struct Scene{
 
     // same thing as models except for shaders
     // the first String is for the vertex shaders and the second one for fragment shaders
-    pub programs: HashMap<String, HashMap<String, Program>>,
+    pub programs: HashMap<(String, String), Program>,
 
     // not sure if this is the right way to do things
     pub display_clone: Display,
@@ -109,7 +110,6 @@ impl<'a> Scene{
     pub fn new(display_clone: Display) -> Self {
         Scene {
             is_active: true,
-            game_objects: Vec::new(),
             models: HashMap::new(),
             programs: HashMap::new(),
             world: World::new(WorldOptions::default()),
@@ -117,34 +117,51 @@ impl<'a> Scene{
         }
     }
 
-    pub fn add_object(&mut self, go: Box<GameObject>) {
+    pub fn add_object(&mut self, go: GameObject) {
         let go_entry = self.world.entry(go.entity).unwrap();
         let gc_res = go_entry.get_component::<GraphicComponent>();
         match gc_res {
             Ok(gc) => {
                 // TODO same things as models except for shaders
-                if ! self.models.contains_key(&gc.geometry) {
-                    load_model(Path::new(&gc.geometry), &self.display_clone);
+                match &gc.geometry {
+                    None => print!("object has graphic component but no model\n"),
+                    Some(geometry) => 
+                        if ! self.models.contains_key(geometry) {
+                            let model = load_model(Path::new(&geometry), &self.display_clone).unwrap();
+                            self.models.insert(geometry.to_string(), model);
+                        },
+                }
+
+
+                // this is beyond horrendous, need to find a clever way to work around all the
+                // clones
+                match (&gc.vertex_shader, &gc.fragment_shader) {
+                    (Some(vertex_shader), Some(fragment_shader)) => {
+                        let program_key = &(vertex_shader.clone(), fragment_shader.clone());
+                        if ! self.programs.contains_key(program_key) {
+                            let program = load_shaders(vertex_shader.clone(), fragment_shader.clone(), &self.display_clone);
+                            self.programs.insert(program_key.clone(), program.unwrap());
+                        }
+                    },
+                    _ => (),
                 }
             }
             Err(_) => (),
         }
     }
+    
         
 
-// TODO make a method for that or a macro at least, checks if there is a component of a
-// certain type attached to an entity
-//if (*self.world.entry(go.entity).unwrap().archetype()).layout().has_component::<GraphicComponent>() {
         
     // loads all active objects
     // so far is only useful for object with graphic components
-    pub fn load_scene(&'a mut self, display: &Display) {
+    /*pub fn load_scene(&'a mut self, display: &Display) {
         /*let go_to_load= self.game_objects.iter().filter(|go| go.is_active() && go.has_graphic_component());
         go_to_load.for_each( |go| {
             let gc = go.get_graphic_component().unwrap();
             load_shaders(gc, display);
         });*/
-    }
+    }*/
 
 
 
@@ -193,17 +210,20 @@ impl<'a> Scene{
                 [0.0, 0.0, -(2.0 * zfar * znear) / (zfar - znear), 0.0],
             ]
         };
+        
 
         // we need the game object in order to draw the object because that is where its
         // transform is stored
-        let mut draw_object = |go: &Box<GameObject>| {
-            print!("drawing object in theory");
-            let go_entry = self.world.entry(go.entity).unwrap();
-            let gc = go_entry.get_component::<GraphicComponent>().unwrap();
-            if gc.is_active() {
+        let mut draw_component = |gc: &GraphicComponent| {
+            //print!("drawing object in theory");
+            //let go_entry = self.world.entry_ref(go.entity).unwrap();
+            //let gc = go_entry.get_component::<GraphicComponent>().unwrap();
+            if gc.is_active() && gc.can_be_drawn() {
 
-                let program = self.programs.get(&gc.vertex_shader).unwrap().get(&gc.fragment_shader).unwrap();
-                let object_geometry = self.models.get(&gc.geometry).unwrap();
+                // TODO this is very unsatisfactory, need to find some way to not have to use clones 
+                let program_key = &(gc.vertex_shader.clone().unwrap(), gc.fragment_shader.clone().unwrap());
+                let program = self.programs.get(program_key).unwrap();
+                let object_geometry = self.models.get(gc.geometry.as_ref().unwrap()).unwrap();
 
 
                 let positions = &object_geometry.vertices;
@@ -234,12 +254,20 @@ impl<'a> Scene{
             
         };
         
-        //let go_to_draw = self.game_objects.iter().filter(|go| go.is_active() && go.has_graphic_component());
+        let mut gc_query = <&GraphicComponent>::query();
 
-        //go_to_draw.for_each(|go| draw_object(go));
+        for gc in gc_query.iter(&self.world) {
+            draw_component(gc);
+        }
+
+        /*let go_to_draw = self.game_objects.iter().filter(
+            |go| go.is_active() && has_graphic_component(&***go, &self.world));
+
+        go_to_draw.for_each(|go| draw_object(go));*/
 
         target.finish().unwrap();
 
     }
 }
+
 

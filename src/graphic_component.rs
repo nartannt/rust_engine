@@ -61,13 +61,15 @@ pub struct GraphicComponent {
     pub is_active: bool,
     // path to the model (should probably have a specific type for that)
     // will become an option if necessary
-    pub geometry: String,
-    pub vertex_shader: String,
-    pub fragment_shader: String,
+    pub geometry: Option<String>,
+    pub vertex_shader: Option<String>,
+    pub fragment_shader: Option<String>,
 }
 
 impl <'a> GraphicComponent {
-    pub fn new(model_path: String, vertex_shader_path: String, fragment_shader_path: String) -> Self {
+    pub fn new(model_path: Option<String>,
+               vertex_shader_path: Option<String>,
+               fragment_shader_path: Option<String>) -> Self {
         GraphicComponent {
             is_active: true,
             geometry: model_path,
@@ -76,14 +78,19 @@ impl <'a> GraphicComponent {
         }
     }
 
-    pub fn add_shaders(&mut self, vertex_shader: String, fragment_shader: String) {
-        self.vertex_shader = vertex_shader;
-        self.fragment_shader = fragment_shader;
+    pub fn can_be_drawn(&self) -> bool {
+        let res = self.geometry.is_some() && self.vertex_shader.is_some() && self.fragment_shader.is_some();
+        return res;
     }
 
-    /*pub fn add_geometry(&mut self, model: ObjectModel) {
+    pub fn add_shaders(&mut self, vertex_shader: String, fragment_shader: String) {
+        self.vertex_shader = Some(vertex_shader);
+        self.fragment_shader = Some(fragment_shader);
+    }
+
+    pub fn add_model(&mut self, model: String) {
         self.geometry = Some(model);
-    }*/
+    }
 
     // the lifetime is way too long, we only need the matrix for a single frame
     // could be solved by passing a mut as parameter and modifying that but it seems disgusting
@@ -219,18 +226,19 @@ pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectMod
 // whilst loudly complaining
 // check if shaders already loaded?
 // TODO return an error, print warning and continue the best we can if function fails
-/*pub fn load_shaders<'a, F: Facade>(mut graph_comp: Box<GraphicComponent>, facade: &'a F) {
+pub fn load_shaders<'a, F: Facade>(vertex_shader: String, fragment_shader: String, facade: &'a F) -> 
+    Option<Program> {
     let res = glium::Program::from_source(
-            facade, graph_comp.vertex_shader.unwrap(), graph_comp.fragment_shader.unwrap(), None);
+            facade, vertex_shader.as_str(), fragment_shader.as_str(), None);
     match res {
         Err(prog_err) => {
             println!("WARNING: shaders have failed to compile");
             println!("{}", prog_err.to_string());
-            graph_comp.program = None;
+            return None;
         },
         Ok(prog_res) => {
-            graph_comp.program = Some(prog_res);
+            return Some(prog_res);
         }
     }
-}*/
+}
 
