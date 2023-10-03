@@ -81,39 +81,39 @@ impl Game {
         viking_scene.add_object(viking_house_go);
 
         let mut is_init = true;
-        let game_loop = event_loop.run(move |ev, _, control_flow| {
+        let game_loop = event_loop.run(
+            move |ev, _, control_flow| {
 
-            let begin_frame_time = std::time::Instant::now();
+                let begin_frame_time = std::time::Instant::now();
 
-            if is_init {
-                is_init = false;
-            }
+                if is_init {
+                    is_init = false;
+                }
 
+                match ev {
+                    glutin::event::Event::WindowEvent { event, .. } => match event {
+                        glutin::event::WindowEvent::CloseRequested => {
+                            *control_flow = glutin::event_loop::ControlFlow::Exit;
+                            return;
+                        }
+                        _ => {
+                            update_camera(event, &mut main_camera);
+                        }
+                    },
+                    _ => (),
+                }
 
-            match ev {
-                glutin::event::Event::WindowEvent { event, .. } => match event {
-                    glutin::event::WindowEvent::CloseRequested => {
-                        *control_flow = glutin::event_loop::ControlFlow::Exit;
-                        return;
-                    }
-                    _ => {
-                        update_camera(event, &mut main_camera);
-                    }
-                },
-                _ => (),
-            }
+                let target = self.display.draw();
 
-            let target = self.display.draw();
+                viking_scene.draw_scene(target, &main_camera);
 
-            viking_scene.draw_scene(target, &main_camera);
+                let next_frame_time = begin_frame_time + std::time::Duration::from_nanos(16_666_667);
 
-            let next_frame_time = begin_frame_time + std::time::Duration::from_nanos(16_666_667);
+                if std::time::Instant::now() > next_frame_time {
+                    println!("Warning: needed more time for this frame");
+                }
 
-            if std::time::Instant::now() > next_frame_time {
-                println!("Warning: needed more time for this frame");
-            }
-
-            *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
+                *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
         });
 
 

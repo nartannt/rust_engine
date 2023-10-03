@@ -34,6 +34,14 @@ mod space;
 mod scene;
 mod game;
 
+// TODO
+//  - hide initilisation steps in main before the loop
+//  - implement an interface for the main game loop, ie: the user will provide a main loop under
+//  the form of a closur that takes glutin events as a parameter, closure which will then be run in
+//  game, where all the rest is handled
+//  - work out a proper interface for something along the lines of a GameObjectTemplate for use
+//  across different scenes
+
 fn main() {
     let event_loop = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new();
