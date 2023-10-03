@@ -33,7 +33,7 @@ pub struct GameObject {
     // we'll tolerate some clunkyness for now
     // this should probably be private
     pub entity: Entity,
-    //pub transform: Transform,
+    pub transform: Transform,
     //pub components: Vec<Box<Component<'a>>>
 }
 
@@ -43,7 +43,7 @@ impl GameObject {
         let test = world.entry(entity).unwrap();
         GameObject {
             is_active: true,
-            //transform: Transform::default(),
+            transform: Transform::default(),
             entity: entity,
         }
     }
@@ -75,17 +75,19 @@ impl GameObject {
     }
 }
 
-// TODO generalise this
-pub fn has_graphic_component(go: &GameObject, world: &World) -> bool {
+pub fn has_component<T: Component>(go: &GameObject, world: &World) -> bool {
     let entry = world.entry_ref(go.entity).unwrap();
     return entry
         .archetype()
         .layout()
-        .has_component::<GraphicComponent>();
+        .has_component::<T>();
 }
 
 pub struct Scene {
     pub is_active: bool,
+
+    // list of all the gameobjects in our scene
+    pub game_objects: Vec<GameObject>,
 
     // since we will only deal with go in relation to their scene
     // it makes sense to have a world per scene
@@ -108,6 +110,7 @@ impl Scene {
     pub fn new(display_clone: Display) -> Self {
         Scene {
             is_active: true,
+            game_objects: Vec::new(),
             models: HashMap::new(),
             programs: HashMap::new(),
             world: World::new(WorldOptions::default()),
@@ -119,7 +122,8 @@ impl Scene {
         let go_entry = self.world.entry(go.entity).unwrap();
         let Ok(gc) = go_entry.get_component::<GraphicComponent>() else { return };
 
-        // TODO same things as models except for shaders
+        // loads and adds the model corresponding to the gc of the go if said model hasn't already
+        // been loaded, when improving performance, will need to check that
         if let Some(geometry) = &gc.geometry {
             self.models
                 .entry(geometry.to_string())
@@ -128,8 +132,7 @@ impl Scene {
             println!("object has graphic component but no model");
         }
 
-        // this is beyond horrendous, need to find a clever way to work around all the
-        // clones
+        // same thing as models but with shaders
         if let (Some(vertex_shader), Some(fragment_shader)) =
             (&gc.vertex_shader, &gc.fragment_shader)
         {
@@ -140,17 +143,9 @@ impl Scene {
         } else {
             println!("object has graphic cock but no shaders")
         }
+        
+        self.game_objects.push(go);
     }
-
-    // loads all active objects
-    // so far is only useful for object with graphic components
-    /*pub fn load_scene(&'a mut self, display: &Display) {
-        /*let go_to_load= self.game_objects.iter().filter(|go| go.is_active() && go.has_graphic_component());
-        go_to_load.for_each( |go| {
-            let gc = go.get_graphic_component().unwrap();
-            load_shaders(gc, display);
-        });*/
-    }*/
 
     // the scene draws all its objects for now, might be subject to change later
     // will draw all active objects with active graphic components
@@ -196,7 +191,7 @@ impl Scene {
 
         // we need the game object in order to draw the object because that is where its
         // transform is stored
-        let mut draw_component = |gc: &GraphicComponent| {
+        let mut draw_component = |gc: &GraphicComponent, obj_transform: &Transform| {
             //print!("drawing object in theory");
             //let go_entry = self.world.entry_ref(go.entity).unwrap();
             //let gc = go_entry.get_component::<GraphicComponent>().unwrap();
@@ -213,13 +208,7 @@ impl Scene {
                 let normals = &object_geometry.normals;
                 let indices = &object_geometry.indices;
 
-                // TODO depends on the transform of each object
-                let matrix = [
-                    [1.0, 0.0, 0.0, 0.0],
-                    [0.0, 1.0, 0.0, 0.0],
-                    [0.0, 0.0, 1.0, 0.0],
-                    [0.0, 0.0, 1.0, 1.0f32],
-                ];
+                let matrix = obj_transform.uniform_matrix();
 
                 // this is where it should be
                 target
@@ -236,14 +225,11 @@ impl Scene {
 
         let mut gc_query = <&GraphicComponent>::query();
 
-        for gc in gc_query.iter(&self.world) {
-            draw_component(gc);
+        for go in &self.game_objects {
+            if let Ok(gc) = self.world.entry(go.entity).unwrap().get_component::<GraphicComponent>() {
+                draw_component(gc, &go.transform);
+            }
         }
-
-        /*let go_to_draw = self.game_objects.iter().filter(
-            |go| go.is_active() && has_graphic_component(&***go, &self.world));
-
-        go_to_draw.for_each(|go| draw_object(go));*/
 
         target.finish().unwrap();
     }

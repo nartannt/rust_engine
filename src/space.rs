@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use cgmath::Matrix3;
+use cgmath::Matrix4;
 use cgmath::Quaternion;
 use cgmath::Vector3;
 use cgmath::Zero;
@@ -88,8 +90,11 @@ pub struct Transform {
 impl Default for Transform {
     fn default() -> Transform {
         Transform::new(
+            // position
             Vector3::new(0.0, 0.0, 0.0f32),
+            // rotation
             Vector3::new(0.0, 0.0, 0.0f32),
+            // scale
             Vector3::new(1.0, 1.0, 1.0f32),
         )
     }
@@ -165,6 +170,39 @@ impl Transform {
     pub fn set_rotation(&mut self, new_rot: Vector3<f32>) -> () {
         self.rotation_quat = euler_to_quaternion(new_rot);
         self.rotation = new_rot;
+    }
+
+    pub fn uniform_matrix(&self) -> [[f32; 4]; 4] {
+        // translation
+        let pos = self.position;
+        let trans_matrix = Matrix4::from([
+            [1.0, 0.0, 0.0, pos.x],
+            [0.0, 1.0, 0.0, pos.y],
+            [0.0, 0.0, 1.0, pos.z],
+            [0.0, 0.0, 0.0, 1.0f32]
+        ]);
+
+        // scaling
+        let scale = self.size;
+        let scale_matrix = Matrix4::from([
+            [scale.x, 0.0, 0.0, 0.0],
+            [0.0, scale.y, 0.0, 0.0],
+            [0.0, 0.0, scale.z, 0.0],
+            [0.0, 0.0, 1.0, 1.0f32],
+        ]);
+
+        // rotation
+        let rotation = self.rotation_quat;
+        let rot_matrix = Matrix3::from(rotation);
+
+        let rot_matrix_4 = Matrix4::from([
+            rot_matrix.x.extend(0.0).into(),
+            rot_matrix.y.extend(0.0).into(),
+            rot_matrix.z.extend(0.0).into(),
+            [0.0, 0.0, 0.0, 1.0f32]
+        ]);
+
+        return (trans_matrix * scale_matrix * rot_matrix_4).into();
     }
 
     pub fn print_transform(self) -> () {

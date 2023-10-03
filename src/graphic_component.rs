@@ -92,16 +92,6 @@ impl <'a> GraphicComponent {
         self.geometry = Some(model);
     }
 
-    // the lifetime is way too long, we only need the matrix for a single frame
-    // could be solved by passing a mut as parameter and modifying that but it seems disgusting
-   pub fn get_uniform_matrix (transform: Transform) -> &'a[&'a[f32; 4]; 4] {
-       return &[
-            &[1.0, 0.0, 0.0, 0.0],
-            &[0.0, 1.0, 0.0, 0.0],
-            &[0.0, 0.0, 1.0, 0.0],
-            &[0.0, 0.0, 0.0, 1.0f32],
-       ];
-    }
 
 
 }
@@ -122,32 +112,6 @@ impl <'a> ComponentTrait<'a> for GraphicComponent {
     }
 
 }
-/*
-// TODO should be in its own file
-// do i actually need this? yes, yes you do, maybe not anymore ...
-pub enum Component<'a> {
-    GraphicComponent(Box<GraphicComponent<'a>>)
-}
-
-impl <'a> ComponentTrait<'a> for Component<'a> {
-    fn is_active(&self) -> bool {
-        match self {
-            Component::GraphicComponent(gc) => GraphicComponent::<'_>::is_active(&gc)
-        }
-    }
-    fn set_active(&mut self, activation: bool) {
-        match self {
-            Component::GraphicComponent(ref mut gc) => gc.set_active(activation)
-        }
-
-    }
-    fn component_type(&self) -> ComponentType {
-        match self {
-            Component::GraphicComponent(gc) => GraphicComponent::<'_>::component_type(&gc)
-        }
-    }
-
-}*/
 
 pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectModel> {
     let file_result = File::open(model_file_path);
