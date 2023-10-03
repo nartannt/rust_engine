@@ -107,11 +107,11 @@ impl <'a> GraphicComponent {
 }
 
 impl <'a> ComponentTrait<'a> for GraphicComponent {
-    
+
     fn is_active(&self) -> bool {
        return self.is_active;
     }
-    
+
     fn set_active(&mut self, activation: bool) {
         self.is_active = activation;
     }
@@ -226,10 +226,10 @@ pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectMod
 // whilst loudly complaining
 // check if shaders already loaded?
 // TODO return an error, print warning and continue the best we can if function fails
-pub fn load_shaders<'a, F: Facade>(vertex_shader: String, fragment_shader: String, facade: &'a F) -> 
+pub fn load_shaders<'a, F: Facade>(vertex_shader: &str, fragment_shader: &str, facade: &'a F) ->
     Option<Program> {
     let res = glium::Program::from_source(
-            facade, vertex_shader.as_str(), fragment_shader.as_str(), None);
+            facade, vertex_shader, fragment_shader, None);
     match res {
         Err(prog_err) => {
             println!("WARNING: shaders have failed to compile");
