@@ -35,7 +35,7 @@
           nativeBuildInputs = [ pkgs.makeWrapper ];
           buildInputs = with pkgs; [
             xorg.libxcb
-            pkgconfig
+            pkg-config
             fontconfig
           ];
           postInstall = ''
@@ -58,7 +58,7 @@
             rustfmt
             tokei
 
-            pkgconfig
+            pkg-config
             fontconfig
             xorg.libxcb
           ];

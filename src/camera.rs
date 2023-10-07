@@ -16,6 +16,18 @@ pub struct Camera {
 }
 
 impl Camera {
+
+    pub fn new() -> Camera {
+        Camera {
+            transform: Transform::new(
+                Vector3::new(0.0, 0.0, -5.0),
+                Vector3::new(0.0, 0.0, 0.0),
+                Vector3::new(1.0, 1.0, 1.0),
+            ),
+            fov: 0.1,
+        }
+    }
+
     pub fn get_transform(self) -> Transform {
         return self.transform;
     }

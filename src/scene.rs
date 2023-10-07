@@ -84,6 +84,8 @@ pub fn has_component<T: Component>(go: &GameObject, world: &World) -> bool {
 }
 
 pub struct Scene {
+    // ideally we would like to maintain the invariant that only one scene is active at a time, i
+    // currently don't know how that would be enforced
     pub is_active: bool,
 
     // list of all the gameobjects in our scene
@@ -104,6 +106,9 @@ pub struct Scene {
 
     // not sure if this is the right way to do things
     pub display_clone: Display,
+
+    // the camera which will draw the scene next, if it is none, the scene is not rendered
+    pub render_cam: Option<Camera>
 }
 
 impl Scene {
@@ -114,6 +119,7 @@ impl Scene {
             models: HashMap::new(),
             programs: HashMap::new(),
             world: World::new(WorldOptions::default()),
+            render_cam: None,
             display_clone,
         }
     }
@@ -145,6 +151,16 @@ impl Scene {
         }
         
         self.game_objects.push(go);
+    }
+
+    // user accessible function that will allow them to set the camera of a scene so that it may be
+    // drawn
+    pub fn to_draw(&mut self, camera: Camera) {
+        self.render_cam = Some(camera);
+    }
+
+    pub fn is_active(&self) -> bool {
+        self.is_active
     }
 
     // the scene draws all its objects for now, might be subject to change later
@@ -210,7 +226,6 @@ impl Scene {
 
                 let matrix = obj_transform.uniform_matrix();
 
-                // this is where it should be
                 target
                     .draw(
                         (positions, normals),
@@ -223,7 +238,7 @@ impl Scene {
             }
         };
 
-        let mut gc_query = <&GraphicComponent>::query();
+        let gc_query = <&GraphicComponent>::query();
 
         for go in &self.game_objects {
             if let Ok(gc) = self.world.entry(go.entity).unwrap().get_component::<GraphicComponent>() {
