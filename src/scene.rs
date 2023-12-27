@@ -29,6 +29,7 @@ use legion::world::World;
 // are only wrappers for legion entities
 pub struct GameObject {
     pub is_active: bool,
+    pub is_loaded: bool,
     // clearly not a good interface but we are currently restructuring the whole project
     // we'll tolerate some clunkyness for now
     // this should probably be private
@@ -43,47 +44,37 @@ impl GameObject {
         let test = world.entry(entity).unwrap();
         GameObject {
             is_active: true,
+            is_loaded: false,
             transform: Transform::default(),
-            entity: entity,
+            entity,
         }
     }
-
-    /*pub fn add_component(&mut self, component: box<component<'a>>) {
-        self.components.push(component);
-    }
-
-    // will return a graphic component of the object
-    // todo handle multiple graphic components
-    // returns ownership of the graphic component
-    pub fn get_graphic_component (&mut self) -> option<box<graphiccomponent<'a>>> {
-        //let graphic_components = self.components.iter().filter(|c| (***c).component_type() == "graphic");
-        let mut gc_list = self.components.iter().filter_map(|c| match *c { &component::graphiccomponent(gc) => some(gc), _ => none});
-        // todo finish this
-        return gc_list.next();
-        //return none;
-    }
-
-    // need to find better name
-    // returns a reference to the graphic component
-    // todo handle multiple graphic components
-    pub fn read_graphic_component(&self) -> option<&box<graphiccomponent<'a>>> {
-        return none;
-    }*/
 
     pub fn is_active(&self) -> bool {
         return self.is_active;
     }
 }
 
+impl ComponentTrait for Transform {
+    fn is_active(&self) -> bool {
+        return true;
+    }
+
+    fn set_active(&mut self, _activation: bool) {}
+
+    fn component_type(&self) -> ComponentType {
+        ComponentType::Transform
+    }
+}
+
 pub fn has_component<T: Component>(go: &GameObject, world: &World) -> bool {
     let entry = world.entry_ref(go.entity).unwrap();
-    return entry
-        .archetype()
-        .layout()
-        .has_component::<T>();
+    return entry.archetype().layout().has_component::<T>();
 }
 
 pub struct Scene {
+    pub name: String,
+
     // ideally we would like to maintain the invariant that only one scene is active at a time, i
     // currently don't know how that would be enforced
     pub is_active: bool,
@@ -105,35 +96,46 @@ pub struct Scene {
     pub programs: HashMap<(String, String), Program>,
 
     // not sure if this is the right way to do things
-    pub display_clone: Display,
+    pub display_clone: Option<Display>,
 
     // the camera which will draw the scene next, if it is none, the scene is not rendered
-    pub render_cam: Option<Camera>
+    pub render_cam: Option<Camera>,
 }
 
 impl Scene {
-    pub fn new(display_clone: Display) -> Self {
+    pub fn new() -> Self {
         Scene {
+            name: "new scene".to_string(),
             is_active: true,
             game_objects: Vec::new(),
             models: HashMap::new(),
             programs: HashMap::new(),
             world: World::new(WorldOptions::default()),
             render_cam: None,
-            display_clone,
+            display_clone: None,
         }
     }
 
-    pub fn add_object(&mut self, go: GameObject) {
-        let go_entry = self.world.entry(go.entity).unwrap();
-        let Ok(gc) = go_entry.get_component::<GraphicComponent>() else { return };
+    pub fn add_display_clone(&mut self, display: &Display) {
+        self.display_clone = Some(display.clone());
+    }
 
+    pub fn add_object(&mut self, go: GameObject) {
+        self.game_objects.push(go);
+    }
+
+    pub fn load_graphic_component(
+        display_clone: &Display,
+        programs: &mut HashMap<(String, String), Program>,
+        models: &mut HashMap<String, ObjectModel>,
+        gc: &GraphicComponent,
+    ) {
         // loads and adds the model corresponding to the gc of the go if said model hasn't already
         // been loaded, when improving performance, will need to check that
         if let Some(geometry) = &gc.geometry {
-            self.models
+            models
                 .entry(geometry.to_string())
-                .or_insert_with(|| load_model(Path::new(&geometry), &self.display_clone).unwrap());
+                .or_insert_with(|| load_model(Path::new(&geometry), display_clone).unwrap());
         } else {
             println!("object has graphic component but no model");
         }
@@ -143,14 +145,21 @@ impl Scene {
             (&gc.vertex_shader, &gc.fragment_shader)
         {
             let program_key = (vertex_shader.clone(), fragment_shader.clone());
-            self.programs.entry(program_key).or_insert_with(|| {
-                load_shaders(vertex_shader, fragment_shader, &self.display_clone).unwrap()
+            programs.entry(program_key).or_insert_with(|| {
+                load_shaders(vertex_shader, fragment_shader, display_clone).unwrap()
             });
         } else {
             println!("object has graphic cock but no shaders")
         }
-        
-        self.game_objects.push(go);
+    }
+
+    pub fn load_all_gc(&mut self) {
+        let go_to_load = self.game_objects.iter().filter(|go| !go.is_loaded);
+        let mut gc_query = <&GraphicComponent>::query();
+        let display_clone = self.display_clone.as_ref().unwrap();
+        gc_query.iter(&self.world).for_each(|gc| {
+            Self::load_graphic_component(display_clone, &mut self.programs, &mut self.models, gc)
+        });
     }
 
     // user accessible function that will allow them to set the camera of a scene so that it may be
@@ -241,7 +250,12 @@ impl Scene {
         let gc_query = <&GraphicComponent>::query();
 
         for go in &self.game_objects {
-            if let Ok(gc) = self.world.entry(go.entity).unwrap().get_component::<GraphicComponent>() {
+            if let Ok(gc) = self
+                .world
+                .entry(go.entity)
+                .unwrap()
+                .get_component::<GraphicComponent>()
+            {
                 draw_component(gc, &go.transform);
             }
         }

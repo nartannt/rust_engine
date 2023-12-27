@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use glium::Display;
-use glium::Program;
 use glium::backend::Facade;
-use glium::ProgramCreationError;
+use glium::Display;
 use glium::IndexBuffer;
+use glium::Program;
+use glium::ProgramCreationError;
 use glium::VertexBuffer;
 use obj::load_obj;
 use obj::Obj;
@@ -35,20 +35,19 @@ implement_vertex!(Normal, normal);
 
 // this should be in its own file TODO
 // also need to find a better name
-pub trait ComponentTrait<'a> {
+pub trait ComponentTrait {
     fn is_active(&self) -> bool;
     fn set_active(&mut self, activation: bool) -> ();
 
     // it would be great to find a more graceful way to handle this (i don't have any ideas)
     fn component_type(&self) -> ComponentType;
-
 }
 
 #[derive(PartialEq)]
 pub enum ComponentType {
-    GraphicComponent
+    GraphicComponent,
+    Transform,
 }
-
 
 pub struct ObjectModel {
     pub vertices: glium::VertexBuffer<Vertex>,
@@ -66,10 +65,12 @@ pub struct GraphicComponent {
     pub fragment_shader: Option<String>,
 }
 
-impl <'a> GraphicComponent {
-    pub fn new(model_path: Option<String>,
-               vertex_shader_path: Option<String>,
-               fragment_shader_path: Option<String>) -> Self {
+impl<'a> GraphicComponent {
+    pub fn new(
+        model_path: Option<String>,
+        vertex_shader_path: Option<String>,
+        fragment_shader_path: Option<String>,
+    ) -> Self {
         GraphicComponent {
             is_active: true,
             geometry: model_path,
@@ -79,7 +80,9 @@ impl <'a> GraphicComponent {
     }
 
     pub fn can_be_drawn(&self) -> bool {
-        let res = self.geometry.is_some() && self.vertex_shader.is_some() && self.fragment_shader.is_some();
+        let res = self.geometry.is_some()
+            && self.vertex_shader.is_some()
+            && self.fragment_shader.is_some();
         return res;
     }
 
@@ -91,26 +94,19 @@ impl <'a> GraphicComponent {
     pub fn add_model(&mut self, model: String) {
         self.geometry = Some(model);
     }
-
-
-
 }
 
-impl <'a> ComponentTrait<'a> for GraphicComponent {
-
+impl ComponentTrait for GraphicComponent {
     fn is_active(&self) -> bool {
-       return self.is_active;
+        return self.is_active;
     }
 
     fn set_active(&mut self, activation: bool) {
         self.is_active = activation;
     }
-
-    // TODO replace string by enum
-    fn component_type (&self) -> ComponentType {
+    fn component_type(&self) -> ComponentType {
         return ComponentType::GraphicComponent;
     }
-
 }
 
 pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectModel> {
@@ -184,25 +180,25 @@ pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectMod
     }
 }
 
-
 // we have two options, we can chose to have the engine crash if anything unexpected happens or
 // wait until we have no choice, will go with the middle ground of waiting as long as possible
 // whilst loudly complaining
 // check if shaders already loaded?
 // TODO return an error, print warning and continue the best we can if function fails
-pub fn load_shaders<'a, F: Facade>(vertex_shader: &str, fragment_shader: &str, facade: &'a F) ->
-    Option<Program> {
-    let res = glium::Program::from_source(
-            facade, vertex_shader, fragment_shader, None);
+pub fn load_shaders<'a, F: Facade>(
+    vertex_shader: &str,
+    fragment_shader: &str,
+    facade: &'a F,
+) -> Option<Program> {
+    let res = glium::Program::from_source(facade, vertex_shader, fragment_shader, None);
     match res {
         Err(prog_err) => {
             println!("WARNING: shaders have failed to compile");
             println!("{}", prog_err.to_string());
             return None;
-        },
+        }
         Ok(prog_res) => {
             return Some(prog_res);
         }
     }
 }
-

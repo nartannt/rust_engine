@@ -16,7 +16,6 @@ pub struct Camera {
 }
 
 impl Camera {
-
     pub fn new() -> Camera {
         Camera {
             transform: Transform::new(

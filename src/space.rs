@@ -12,7 +12,6 @@ use libm::cosf;
 use libm::sinf;
 use num::Float;
 
-
 // TODO genrealise functions beyond f32 (not urgent, not important, would be nice tho)
 
 // norm of a vector2
@@ -179,7 +178,7 @@ impl Transform {
             [1.0, 0.0, 0.0, pos.x],
             [0.0, 1.0, 0.0, pos.y],
             [0.0, 0.0, 1.0, pos.z],
-            [0.0, 0.0, 0.0, 1.0f32]
+            [0.0, 0.0, 0.0, 1.0f32],
         ]);
 
         // scaling
@@ -199,7 +198,7 @@ impl Transform {
             rot_matrix.x.extend(0.0).into(),
             rot_matrix.y.extend(0.0).into(),
             rot_matrix.z.extend(0.0).into(),
-            [0.0, 0.0, 0.0, 1.0f32]
+            [0.0, 0.0, 0.0, 1.0f32],
         ]);
 
         return (trans_matrix * scale_matrix * rot_matrix_4).into();
