@@ -1,7 +1,7 @@
 
 
 Right now the main goal is cleaning up the code, creating the modules, finishing some basic interface and getting a minimal project working.
-Development will then consist in developing an example game (ideally a clone of some (or several) existing games) and adding features as needed developping both in parallel.
+Development will then consist in developing an example game (a kingdom rush clone) and adding features as needed developping both in parallel.
 Once a reasonable set of features are implemented work on a "real" game and refine the engine as the game demands it.
 
 TODO (general) :

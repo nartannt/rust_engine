@@ -24,9 +24,6 @@ use cgmath::Vector3;
 use glium::Surface;
 use glutin::event::VirtualKeyCode;
 use std::path::Path;
-//use crate::graphic_component::load_shaders;
-//use crate::graphic_component::Component;
-//use crate::Component::GraphicComponent as GC;
 use glutin::event::WindowEvent::Destroyed;
 
 mod camera;
@@ -44,7 +41,6 @@ mod space;
 //  across different scenes
 //  - make the project into a library
 //  - provide a clean interface (ie: that doesn't expose legion) for the ecs)
-//  - add getters and setters for all relevant functions
 //  - make relevant fields of objects private once getters and setters have been implemented
 //  - write documentation
 //  - write tests and implement a pipeline
@@ -57,6 +53,7 @@ mod space;
 //  - maybe add field to game object that would specify how they behave (like the unity
 //  monobehaviour) ?
 //  - add basic lighting
+//  - enable adding textures
 //  - reorganise the various files into more coherent ones
 //  - use linter
 //  - format code
@@ -65,7 +62,6 @@ mod space;
 //  - check that we are indeed using the graphics card
 
 fn main() {
-    let mut game: Game = Game::new();
 
     let viking_house_model_path = Path::new("src/test2.obj").to_str().unwrap().to_string();
 
@@ -108,6 +104,7 @@ fn main() {
     "#
     .to_string();
 
+    let mut game: Game = Game::new();
     let mut viking_scene = Scene::new();
 
     let mut viking_house_gc = GraphicComponent::new(None, None, None);
@@ -121,19 +118,12 @@ fn main() {
     let viking_house_go = GameObject::new(&mut viking_scene.world);
     let cube_go = GameObject::new(&mut viking_scene.world);
 
-    viking_scene
-        .world
-        .entry(viking_house_go.entity)
-        .unwrap()
-        .add_component(viking_house_gc);
-    viking_scene
-        .world
-        .entry(cube_go.entity)
-        .unwrap()
-        .add_component(cube_gc);
+    viking_scene.add_component(&viking_house_go, viking_house_gc);
+    viking_scene.add_component(&cube_go, cube_gc);
 
     viking_scene.add_object(viking_house_go);
     viking_scene.add_object(cube_go);
+
     game.add_scene(viking_scene);
 
     game.run();
