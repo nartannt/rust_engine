@@ -23,8 +23,8 @@ use crate::space::Transform;
 use cgmath::Vector3;
 use glium::Surface;
 use glutin::event::VirtualKeyCode;
-use std::path::Path;
 use glutin::event::WindowEvent::Destroyed;
+use std::path::Path;
 
 mod camera;
 mod fps_camera_controller;
@@ -40,8 +40,6 @@ mod space;
 //  - work out a proper interface for something along the lines of a GameObjectTemplate for use
 //  across different scenes
 //  - make the project into a library
-//  - provide a clean interface (ie: that doesn't expose legion) for the ecs)
-//  - make relevant fields of objects private once getters and setters have been implemented
 //  - write documentation
 //  - write tests and implement a pipeline
 //  - comment what is happening
@@ -62,47 +60,13 @@ mod space;
 //  - check that we are indeed using the graphics card
 
 fn main() {
-
     let viking_house_model_path = Path::new("src/test2.obj").to_str().unwrap().to_string();
 
     let cube_model_path = Path::new("src/cube.obj").to_str().unwrap().to_string();
 
     // eventually load them from seperate file
-    let vertex_shader_src = r#"
-        #version 150
-
-        in vec3 position;
-        in vec3 normal;
-    
-        out vec3 v_normal;
-        
-        uniform mat4 matrix;
-        uniform mat4 perspective;
-        uniform mat4 view;
-        //uniform mat4 resize;
-        
-        void main() {
-            mat4 modelview = view * matrix;
-            v_normal = transpose(inverse(mat3(modelview))) * normal;
-            gl_Position = perspective * modelview * vec4(position, 1.0);
-        }
-    "#
-    .to_string();
-    let fragment_shader_src = r#"
-        #version 140
-        
-        in vec3 v_normal; 
-        out vec4 color;
-        uniform vec3 u_light; 
-        
-        void main() {
-            float brightness = dot(normalize(v_normal), normalize(u_light));
-            vec3 dark_color = vec3(0.5, 0.0, 0.0);
-            vec3 regular_color = vec3(1.0, 0.0, 0.0);
-            color = vec4(mix(dark_color, regular_color, brightness), 1.0);
-        }
-    "#
-    .to_string();
+    let vertex_shader_src = "assets/shaders/vertex_shader".to_string();
+    let fragment_shader_src = "assets/shaders/fragment_shader".to_string();
 
     let mut game: Game = Game::new();
     let mut viking_scene = Scene::new();

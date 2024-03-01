@@ -120,7 +120,7 @@ impl Scene {
         self.display_clone = Some(display.clone());
     }
 
-    pub fn add_component<C:Component>(&mut self, go: &GameObject, component: C) {
+    pub fn add_component<C: Component>(&mut self, go: &GameObject, component: C) {
         let mut entry = self.world.entry(go.entity).unwrap();
         entry.add_component(component);
     }
@@ -142,7 +142,7 @@ impl Scene {
                 .entry(geometry.to_string())
                 .or_insert_with(|| load_model(Path::new(&geometry), display_clone).unwrap());
         } else {
-            println!("object has graphic component but no model");
+            println!("Warning: object has graphic component but no model");
         }
 
         // same thing as models but with shaders
@@ -154,7 +154,7 @@ impl Scene {
                 load_shaders(vertex_shader, fragment_shader, display_clone).unwrap()
             });
         } else {
-            println!("object has graphic cock but no shaders")
+            println!("Warning: object has graphic cock but no shaders")
         }
     }
 

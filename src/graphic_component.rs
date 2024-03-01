@@ -10,6 +10,7 @@ use glium::VertexBuffer;
 use obj::load_obj;
 use obj::Obj;
 use obj::ObjError;
+use std::fs;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -39,7 +40,6 @@ pub trait ComponentTrait {
     fn is_active(&self) -> bool;
     fn set_active(&mut self, activation: bool) -> ();
 
-    // it would be great to find a more graceful way to handle this (i don't have any ideas)
     fn component_type(&self) -> ComponentType;
 }
 
@@ -58,8 +58,6 @@ pub struct ObjectModel {
 //#[derive(Default)]
 pub struct GraphicComponent {
     pub is_active: bool,
-    // path to the model (should probably have a specific type for that)
-    // will become an option if necessary
     pub geometry: Option<String>,
     pub vertex_shader: Option<String>,
     pub fragment_shader: Option<String>,
@@ -186,11 +184,33 @@ pub fn load_model(model_file_path: &Path, display: &Display) -> Option<ObjectMod
 // check if shaders already loaded?
 // TODO return an error, print warning and continue the best we can if function fails
 pub fn load_shaders<'a, F: Facade>(
-    vertex_shader: &str,
-    fragment_shader: &str,
+    vertex_shader_path: &str,
+    fragment_shader_path: &str,
     facade: &'a F,
 ) -> Option<Program> {
-    let res = glium::Program::from_source(facade, vertex_shader, fragment_shader, None);
+    let vertex_file_res = fs::read_to_string(vertex_shader_path);
+    let fragment_file_res = fs::read_to_string(fragment_shader_path);
+
+    match vertex_file_res {
+        Err(err) => {
+            println!("Warning, failed to open vertex shader file: {}", err);
+            return None;
+        }
+        Ok(_) => {}
+    };
+
+    match fragment_file_res {
+        Err(err) => {
+            println!("Warning, failed to open fragment shader file: {}", err);
+            return None;
+        }
+        Ok(_) => {}
+    };
+
+    let vertex_shader_src = vertex_file_res.unwrap();
+    let fragment_shader_src = fragment_file_res.unwrap();
+
+    let res = glium::Program::from_source(facade, &vertex_shader_src, &fragment_shader_src, None);
     match res {
         Err(prog_err) => {
             println!("WARNING: shaders have failed to compile");
