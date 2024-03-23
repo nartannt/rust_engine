@@ -1,59 +1,19 @@
-use crate::GameObject;
-use std::thread::sleep;
-use crate::GraphicComponent;
 use crate::Scene;
-use crate::Vector3;
-use cgmath;
-use glutin::event::VirtualKeyCode;
-use glutin::event::WindowEvent;
-use glutin::event_loop::ControlFlow;
-use glutin::event_loop::ControlFlow::WaitUntil;
-use legion::EntityStore;
+use crate::Camera;
+use crate::Transform;
+use crate::input::KeyboardState;
+use crate::fps_camera_controller::update_camera;
+
 use std::cell::OnceCell;
 use std::collections::HashMap;
 use std::path::Path;
-use crate::update_camera;
-use crate::Camera;
-use crate::Transform;
+use std::thread::sleep;
+
+use glutin::event::VirtualKeyCode;
+use glutin::event::WindowEvent;
+use glutin::event_loop::ControlFlow::WaitUntil;
 use glutin::event_loop::EventLoop;
-use legion::world::World;
-use glutin::event::ElementState;
 
-// this code was stolen from https://github.com/rust-windowing/glutin/issues/708 because i couldn't
-// be asked to write it myself
-/// Keeps track of which keys have been pressed.
-pub struct KeyboardState {
-    state: HashMap<VirtualKeyCode, ElementState>,
-}
-impl KeyboardState {
-    /// Constructs a new KeyboardState with all the keys released.
-    pub fn new() -> KeyboardState {
-        KeyboardState {
-            state: HashMap::new(),
-        }
-    }
-
-    /// Returns true if `key` is pressed.
-    pub fn is_pressed(&self, key: &VirtualKeyCode) -> bool {
-        self.state.get(key).map(|&s| s == ElementState::Pressed).unwrap_or(false)
-    }
-    /// Returns true if `key` is released.
-    pub fn is_released(&self, key: &VirtualKeyCode) -> bool {
-        !self.is_pressed(key)
-    }
-
-    /// Processes a keyboard event and updated the internal state.
-    pub fn process_event(&mut self, key_state: ElementState, code: VirtualKeyCode) {
-        match key_state {
-            ElementState::Pressed => {
-                self.state.insert(code, key_state);
-            },
-            ElementState::Released => {
-                self.state.remove(&code);
-            }
-        }
-    }
-}
 
 pub struct Game {
     pub display: glium::Display,

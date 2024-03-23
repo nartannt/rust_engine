@@ -3,11 +3,11 @@
 #![allow(unused_imports)]
 
 use crate::camera::Camera;
-use crate::space::rotation_to_direction;
+use crate::transform::rotation_to_direction;
 use cgmath::Vector3;
 use glutin::event::VirtualKeyCode;
 use glutin::event::WindowEvent;
-use crate::game::KeyboardState;
+use crate::input::KeyboardState;
 
 // Once again could use more generic types, can't be bothered for now, might never be
 enum CamInstr {
@@ -68,7 +68,6 @@ fn get_camera_instr(keyboard_state: &KeyboardState, camera: &Camera) -> Vec<CamI
     let mut camera_instructions: Vec<CamInstr> = Vec::new();
     //let mut all_instructions = [];
     // this implementation is satisfactory for tests, but not for actual use
-    // TODO need to return lists such that multiple key presses can be registered at once
     // TODO need to use mouse movement to rotate camera
     // TODO move relative to the camera fwd for (same for strafing left/right)
     //println!("event: {:?}", event);
@@ -115,8 +114,5 @@ fn get_camera_instr(keyboard_state: &KeyboardState, camera: &Camera) -> Vec<CamI
     if keyboard_state.is_pressed(&VirtualKeyCode::P) {
         camera_instructions.push(CamInstr::PrintTransform());
     }
-
     return camera_instructions;
-
-
 }

@@ -4,10 +4,10 @@
 use cgmath::Quaternion;
 use cgmath::Vector3;
 
-use crate::space::quaternion_normalised;
-use crate::space::rotation_to_direction;
-use crate::space::v3_normalised;
-use crate::space::Transform;
+use crate::transform::quaternion_normalised;
+use crate::transform::rotation_to_direction;
+use crate::transform::v3_normalised;
+use crate::transform::Transform;
 
 #[derive(Copy, Clone)]
 pub struct Camera {

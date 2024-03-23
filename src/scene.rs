@@ -1,76 +1,36 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use crate::component::ComponentTrait;
+use crate::component::ComponentType;
+
+use crate::game_object::GameObject;
+
+use crate::graphic_component::ObjectModel;
 use crate::graphic_component::load_model;
 use crate::graphic_component::load_shaders;
 use crate::graphic_component::GraphicComponent;
-use crate::space::Transform;
+use crate::transform::Transform;
+use crate::Camera;
+
 use glium::Frame;
 use glium::Program;
-use legion::storage::Component;
-use legion::world::WorldOptions;
+use glium::Surface;
+use glium::Display;
+
 use legion::EntityStore;
 use legion::IntoQuery;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::path::Path;
-//use crate::graphic_component::Component;
-use crate::glium::Surface;
-use crate::graphic_component::ComponentTrait;
-use crate::graphic_component::ComponentType;
-use crate::graphic_component::ObjectModel;
-use crate::Camera;
-use glium::Display;
-//use crate::load_shaders;
+use legion::storage::Component;
+use legion::world::WorldOptions;
 use legion::world::Entity;
 use legion::world::Entry;
 use legion::world::World;
 
-// are only wrappers for legion entities
-pub struct GameObject {
-    pub is_active: bool,
-    pub is_loaded: bool,
-    // clearly not a good interface but we are currently restructuring the whole project
-    // we'll tolerate some clunkyness for now
-    // this should probably be private
-    pub entity: Entity,
-    pub transform: Transform,
-    //pub components: Vec<Box<Component<'a>>>
-}
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::path::Path;
 
-impl GameObject {
-    pub fn new(world: &mut World) -> Self {
-        let entity = world.push(());
-        let test = world.entry(entity).unwrap();
-        GameObject {
-            is_active: true,
-            is_loaded: false,
-            transform: Transform::default(),
-            entity,
-        }
-    }
 
-    pub fn is_active(&self) -> bool {
-        return self.is_active;
-    }
-}
-
-impl ComponentTrait for Transform {
-    fn is_active(&self) -> bool {
-        return true;
-    }
-
-    fn set_active(&mut self, _activation: bool) {}
-
-    fn component_type(&self) -> ComponentType {
-        ComponentType::Transform
-    }
-}
-
-pub fn has_component<T: Component>(go: &GameObject, world: &World) -> bool {
-    let entry = world.entry_ref(go.entity).unwrap();
-    return entry.archetype().layout().has_component::<T>();
-}
 
 pub struct Scene {
     pub name: String,
@@ -177,9 +137,8 @@ impl Scene {
         self.is_active
     }
 
-    // the scene draws all its objects for now, might be subject to change later
     // will draw all active objects with active graphic components
-    // note for now, we assume that all objects have at most one graphic component
+    // we assume that all objects have at most one graphic component
     pub fn draw_scene(&mut self, mut target: Frame, camera: &Camera) {
         // refreshes the background colour
         target.clear_color_and_depth((0.0, 0.0, 1.0, 1.0), 1.0);

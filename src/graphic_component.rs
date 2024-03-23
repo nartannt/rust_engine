@@ -1,24 +1,27 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use glium::backend::Facade;
-use glium::Display;
-use glium::IndexBuffer;
-use glium::Program;
-use glium::ProgramCreationError;
-use glium::VertexBuffer;
-use obj::load_obj;
-use obj::Obj;
-use obj::ObjError;
+use crate::transform::Transform;
+use crate::component::ComponentTrait;
+use crate::component::ComponentType;
+
 use std::fs;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
+use glium::backend::Facade;
+use glium::Display;
+use glium::IndexBuffer;
+use glium::Program;
+use glium::VertexBuffer;
+
+use obj::load_obj;
+use obj::Obj;
+use obj::ObjError;
+
 extern crate glium;
 extern crate obj;
-
-use crate::Transform;
 
 #[derive(Copy, Clone)]
 pub struct Vertex {
@@ -34,20 +37,6 @@ pub struct Normal {
 
 implement_vertex!(Normal, normal);
 
-// this should be in its own file TODO
-// also need to find a better name
-pub trait ComponentTrait {
-    fn is_active(&self) -> bool;
-    fn set_active(&mut self, activation: bool) -> ();
-
-    fn component_type(&self) -> ComponentType;
-}
-
-#[derive(PartialEq)]
-pub enum ComponentType {
-    GraphicComponent,
-    Transform,
-}
 
 pub struct ObjectModel {
     pub vertices: glium::VertexBuffer<Vertex>,

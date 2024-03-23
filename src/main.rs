@@ -16,27 +16,27 @@ use legion::world::World;
 //use crate::graphic_component::load_model;
 use crate::game::Game;
 use crate::graphic_component::GraphicComponent;
-use crate::scene::GameObject;
+use crate::game_object::GameObject;
 use crate::scene::Scene;
-use crate::space::rotation_to_direction;
-use crate::space::Transform;
+use crate::transform::rotation_to_direction;
+use crate::transform::Transform;
 use cgmath::Vector3;
 use glium::Surface;
 use glutin::event::VirtualKeyCode;
 use glutin::event::WindowEvent::Destroyed;
 use std::path::Path;
 
-mod camera;
-mod fps_camera_controller;
-mod game;
-mod graphic_component;
-mod scene;
-mod space;
+pub mod camera;
+pub mod game_object;
+pub mod input;
+pub mod fps_camera_controller;
+pub mod game;
+pub mod graphic_component;
+pub mod scene;
+pub mod transform;
+pub mod component;
 
 // TODO
-//  - implement an interface for the main game loop, ie: the user will provide a main loop under
-//  the form of a closure that takes glutin events as a parameter, closure which will then be run in
-//  game, where all the rest is handled
 //  - work out a proper interface for something along the lines of a GameObjectTemplate for use
 //  across different scenes
 //  - make the project into a library

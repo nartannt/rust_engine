@@ -7,22 +7,59 @@ Once a reasonable set of features are implemented work on a "real" game and refi
 TODO (general) :
     - Reorganise all files
     - Make modules out of the relevant parts
-    - Decide on an interface
     - Get minimal project working
+    - Add support for textures
     - Lighting
+    - make a demo repo for trying things out
 
 TODO (precise steps) :
-    - Allow camera to handle multiple simultaneous key presses 
+    - use mouse to rotate camera
     - Figure out a way for scene to be able to load all its unloaded game objects at once
-    - Move scene and go creation outside game.rs
     - make game draw the scenes in self.scenes
+
+File organisation:
+
+   - component.rs, logic and traits related to components
+
+   - camera.rs, camera struct and basic functions
+
+   - game_object.rs
+
+   - game.rs, game struct
+      -- Game::run() is the main loop of the game
+
+   - graphic_component.rs 
+      -- object model struct
+      -- graphic compoenent struct
+      -- load model and shader functions
+
+   - fps_camera_controller.rs, allows for an fps camera controller
+      -- TODO should not be in base project, but is useful for testing
+
+   - input.rs, handles input
+      -- keeps track of the keyboard state
+      -- TODO mouse state
+
+   - main.rs, main
+
+   - scene.rs
+      -- draws its objects
+      -- TODO current assumption that each go has at most one gc
+
+   - transform.rs, transform struct and rotation related functions
+
 
 Interface:
 
-Steps to creating a gameobject:
-    - create the gameobject (the default transform will be the orgin)
-    - add or change components to the gameobject (this can be done at any time)
-        * components include:
-            -- transform
-            -- model
-            -- behaviour function (like monobehaviour in unity)
+Creating a go, scene and showing them on screen:
+   - create new game
+   - create new scene
+   - create graphic component
+      -- requires shaders (vertex and fragment)
+      -- requires model
+   - add model and shader to gc
+   - create go
+   - add graphic component to go in scene
+   - add go to scene
+   - add scene to game
+   - run

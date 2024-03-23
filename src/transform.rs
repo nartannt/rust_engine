@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use crate::component::ComponentTrait;
+use crate::component::ComponentType;
+
 use cgmath::Matrix3;
 use cgmath::Matrix4;
 use cgmath::Quaternion;
@@ -75,6 +78,31 @@ pub fn quaternion_to_euler(q: Quaternion<f32>) -> Vector3<f32> {
     return res;
 }
 
+pub fn quaternion_normalised(quat: Quaternion<f32>) -> Quaternion<f32> {
+    let norm = num::Float::sqrt(
+        quat.s * quat.s + quat.v.x * quat.v.x + quat.v.y * quat.v.y + quat.v.z * quat.v.z,
+    );
+    if norm.is_zero() {
+        println!("hmm");
+        return quat;
+    } else {
+        // should be allowed to do this
+        if quat.s < 0.0 {
+            return -quat / norm;
+        } else {
+            return quat / norm;
+        }
+    }
+}
+
+// get the vector rotated by rot
+pub fn rotation_to_direction(rot: Quaternion<f32>, initial_dir: Vector3<f32>) -> Vector3<f32> {
+    let quat_dir = quaternion_normalised(Quaternion::from_sv(0.0, initial_dir));
+    let new_quat = rot * quat_dir * rot.conjugate();
+
+    return v3_normalised(new_quat.v);
+}
+
 // the information of how an object is in space
 // should we be using a generic num::Float type instead?
 // probably, but that is something that can be refactored later
@@ -105,7 +133,7 @@ impl Transform {
             position: pos,
             rotation: rot,
             rotation_quat: euler_to_quaternion(rot),
-            size: size,
+            size,
         };
         return res;
     }
@@ -148,7 +176,6 @@ impl Transform {
     }
 
     // returns a tuple with the local x, y and z axes
-    // maybe it should return a vector idk
     pub fn local_axes(&self) -> (Vector3<f32>, Vector3<f32>, Vector3<f32>) {
         let world_x = Vector3::new(1.0, 0.0, 0.0);
         let local_x = rotation_to_direction(self.rotation_quat, world_x);
@@ -218,34 +245,14 @@ impl Transform {
     }
 }
 
-pub fn quaternion_normalised(quat: Quaternion<f32>) -> Quaternion<f32> {
-    let norm = num::Float::sqrt(
-        quat.s * quat.s + quat.v.x * quat.v.x + quat.v.y * quat.v.y + quat.v.z * quat.v.z,
-    );
-    if norm.is_zero() {
-        println!("hmm");
-        return quat;
-    } else {
-        // should be allowed to do this
-        if quat.s < 0.0 {
-            return -quat / norm;
-        } else {
-            return quat / norm;
-        }
+impl ComponentTrait for Transform {
+    fn is_active(&self) -> bool {
+        return true;
     }
-}
 
-// get the vector rotated by rot
-pub fn rotation_to_direction(rot: Quaternion<f32>, initial_dir: Vector3<f32>) -> Vector3<f32> {
-    let quat_dir = quaternion_normalised(Quaternion::from_sv(0.0, initial_dir));
-    let new_quat = rot * quat_dir * rot.conjugate();
+    fn set_active(&mut self, _activation: bool) {}
 
-    return v3_normalised(new_quat.v);
-}
-
-pub fn print_quat(quat: Quaternion<f32>) -> () {
-    println!(
-        "w: {}, i: {}, j: {}, k: {}",
-        quat.s, quat.v.x, quat.v.y, quat.v.z
-    );
+    fn component_type(&self) -> ComponentType {
+        ComponentType::Transform
+    }
 }
